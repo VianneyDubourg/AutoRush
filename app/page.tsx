@@ -16,146 +16,91 @@ export default function Home() {
       }
       initIcons()
 
-      // Draggable Functionality
-      const dashboard = document.getElementById('dashboard-wrapper')
-      const handle = document.getElementById('drag-handle')
-      
-      if (dashboard && handle) {
-        let isDragging = false
-        let currentX: number
-        let currentY: number
-        let initialX: number
-        let initialY: number
-        let xOffset = 0
-        let yOffset = 0
-
-        const dragStart = (e: MouseEvent) => {
-          initialX = e.clientX - xOffset
-          initialY = e.clientY - yOffset
-
-          if ((e.target as HTMLElement).closest('#drag-handle')) {
-            isDragging = true
-            dashboard.classList.add('dragging')
+      // Live Data Simulation
+      const updateStats = () => {
+        // Vidéos traitées - légère variation
+        if(Math.random() > 0.8) {
+          const videos = document.getElementById('stat-videos')
+          if(videos) {
+            const val = parseInt(videos.innerText)
+            videos.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
           }
         }
-
-        const dragEnd = () => {
-          initialX = currentX
-          initialY = currentY
-          isDragging = false
-          dashboard.classList.remove('dragging')
-        }
-
-        const drag = (e: MouseEvent) => {
-          if (isDragging) {
-            e.preventDefault()
-            currentX = e.clientX - initialX
-            currentY = e.clientY - initialY
-
-            xOffset = currentX
-            yOffset = currentY
-
-            setTranslate(currentX, currentY, dashboard)
+        
+        // AutoCut - légère variation
+        if(Math.random() > 0.85) {
+          const autocut = document.getElementById('stat-autocut')
+          if(autocut) {
+            const val = parseInt(autocut.innerText)
+            autocut.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
           }
         }
-
-        const setTranslate = (xPos: number, yPos: number, el: HTMLElement) => {
-          el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`
-        }
-
-        handle.addEventListener("mousedown", dragStart)
-        document.addEventListener("mouseup", dragEnd)
-        document.addEventListener("mousemove", drag)
-
-          // Live Data Simulation
-          const updateStats = () => {
-            // Vidéos traitées - légère variation
-            if(Math.random() > 0.8) {
-              const videos = document.getElementById('stat-videos')
-              if(videos) {
-                const val = parseInt(videos.innerText)
-                videos.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
-              }
-            }
-            
-            // AutoCut - légère variation
-            if(Math.random() > 0.85) {
-              const autocut = document.getElementById('stat-autocut')
-              if(autocut) {
-                const val = parseInt(autocut.innerText)
-                autocut.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
-              }
-            }
-            
-            // AutoFrame - légère variation
-            if(Math.random() > 0.9) {
-              const autoframe = document.getElementById('stat-autoframe')
-              if(autoframe) {
-                const val = parseInt(autoframe.innerText)
-                autoframe.innerText = (val + (Math.random() > 0.7 ? 1 : 0)).toString()
-              }
-            }
-          }
-        const statsInterval = setInterval(updateStats, 2000)
-
-        // Sidebar Navigation Logic
-        ;(window as any).setActiveTab = (element: HTMLElement, tabName: string) => {
-          const items = document.querySelectorAll('.sidebar-item')
-          items.forEach(item => item.classList.remove('active'))
-          element.classList.add('active')
-
-          const title = document.getElementById('page-title')
-          if (title) {
-            const titles: Record<string, string> = {
-              overview: "Vue d'ensemble",
-              analytics: "AutoCut",
-              deployments: "AutoFrame",
-              team: "Mes vidéos"
-            }
-            title.innerText = titles[tabName] || tabName.charAt(0).toUpperCase() + tabName.slice(1)
-          }
-
-          const views = document.querySelectorAll('.view-content')
-          views.forEach(view => {
-            view.classList.remove('active')
-          })
-
-          const selectedView = document.getElementById('view-' + tabName)
-          if(selectedView) {
-            selectedView.classList.add('active')
-            selectedView.style.animation = 'none'
-            selectedView.offsetHeight
-            selectedView.style.animation = ''
+        
+        // AutoFrame - légère variation
+        if(Math.random() > 0.9) {
+          const autoframe = document.getElementById('stat-autoframe')
+          if(autoframe) {
+            const val = parseInt(autoframe.innerText)
+            autoframe.innerText = (val + (Math.random() > 0.7 ? 1 : 0)).toString()
           }
         }
+      }
+      const statsInterval = setInterval(updateStats, 2000)
 
-        // Chart Tooltip Logic
-        ;(window as any).showTooltip = (element: HTMLElement, value: string) => {
-          const tooltip = document.getElementById('tooltip')
-          if (tooltip) {
-            tooltip.innerText = value + ' vidéos/h'
-            tooltip.style.opacity = '1'
-            
-            const rect = element.getBoundingClientRect()
-            const parentRect = element.parentElement?.getBoundingClientRect()
-            if (parentRect) {
-              const left = rect.left - parentRect.left
-              tooltip.style.left = (left - 10) + 'px'
-            }
+      // Sidebar Navigation Logic
+      ;(window as any).setActiveTab = (element: HTMLElement, tabName: string) => {
+        const items = document.querySelectorAll('.sidebar-item')
+        items.forEach(item => item.classList.remove('active'))
+        element.classList.add('active')
+
+        const title = document.getElementById('page-title')
+        if (title) {
+          const titles: Record<string, string> = {
+            overview: "Vue d'ensemble",
+            analytics: "AutoCut",
+            deployments: "AutoFrame",
+            team: "Mes vidéos"
+          }
+          title.innerText = titles[tabName] || tabName.charAt(0).toUpperCase() + tabName.slice(1)
+        }
+
+        const views = document.querySelectorAll('.view-content')
+        views.forEach(view => {
+          view.classList.remove('active')
+        })
+
+        const selectedView = document.getElementById('view-' + tabName)
+        if(selectedView) {
+          selectedView.classList.add('active')
+          selectedView.style.animation = 'none'
+          selectedView.offsetHeight
+          selectedView.style.animation = ''
+        }
+      }
+
+      // Chart Tooltip Logic
+      ;(window as any).showTooltip = (element: HTMLElement, value: string) => {
+        const tooltip = document.getElementById('tooltip')
+        if (tooltip) {
+          tooltip.innerText = value + ' vidéos/h'
+          tooltip.style.opacity = '1'
+          
+          const rect = element.getBoundingClientRect()
+          const parentRect = element.parentElement?.getBoundingClientRect()
+          if (parentRect) {
+            const left = rect.left - parentRect.left
+            tooltip.style.left = (left - 10) + 'px'
           }
         }
+      }
 
-        ;(window as any).hideTooltip = () => {
-          const tooltip = document.getElementById('tooltip')
-          if (tooltip) tooltip.style.opacity = '0'
-        }
+      ;(window as any).hideTooltip = () => {
+        const tooltip = document.getElementById('tooltip')
+        if (tooltip) tooltip.style.opacity = '0'
+      }
 
-        return () => {
-          handle.removeEventListener("mousedown", dragStart)
-          document.removeEventListener("mouseup", dragEnd)
-          document.removeEventListener("mousemove", drag)
-          clearInterval(statsInterval)
-        }
+      return () => {
+        clearInterval(statsInterval)
       }
     }
   }, [])
@@ -224,13 +169,6 @@ export default function Home() {
             z-index: 40;
             touch-action: none;
           }
-          #dashboard-wrapper.dragging {
-            transition: none;
-            cursor: grabbing;
-            transform: scale(1.01);
-          }
-          .grab-handle { cursor: grab; }
-          .grab-handle:active { cursor: grabbing; }
           .sidebar-item.active {
             background: rgba(255,255,255,0.08);
             color: white;
@@ -308,9 +246,9 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 pointer-events-auto">
-              <a href="/register" className="w-full sm:w-auto px-8 py-3.5 bg-white text-black font-medium rounded-full hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
-                Commencer gratuitement
-                <i data-lucide="arrow-right" className="w-4 h-4"></i>
+              <a href="/register" className="w-full sm:w-auto px-8 py-3.5 bg-white text-black font-medium rounded-full hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95 text-center">
+                <span>Commencer gratuitement</span>
+                <i data-lucide="arrow-right" className="w-4 h-4 flex-shrink-0"></i>
               </a>
               <a href="/docs" className="w-full sm:w-auto px-8 py-3.5 bg-white/5 text-white border border-white/10 font-medium rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
                 <i data-lucide="book-open" className="w-4 h-4 text-neutral-400"></i>
@@ -322,17 +260,16 @@ export default function Home() {
             {/* Draggable Dashboard Mockup */}
             <div className="relative max-w-5xl mx-auto pointer-events-auto perspective-1000">
               <div id="dashboard-wrapper" className="glass-panel rounded-xl overflow-hidden shadow-2xl glow-effect select-none transform-gpu transition-all duration-75">
-                <div id="drag-handle" className="grab-handle h-10 bg-black/40 border-b border-white/5 flex items-center px-4 gap-2 group">
+                <div id="drag-handle" className="h-10 bg-black/40 border-b border-white/5 flex items-center px-4 gap-2 group">
                   <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50 hover:bg-red-500 transition-colors cursor-pointer"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 hover:bg-yellow-500 transition-colors cursor-pointer"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50 hover:bg-green-500 transition-colors cursor-pointer"></div>
+                    <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50 transition-colors"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 transition-colors"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50 transition-colors"></div>
                   </div>
-                  <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-white/5 rounded text-xs text-neutral-500 font-mono hover:bg-white/10 hover:text-neutral-300 transition-colors cursor-text group/url">
+                  <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-white/5 rounded text-xs text-neutral-500 font-mono group/url">
                     <i data-lucide="lock" className="w-3 h-3 group-hover/url:text-green-400 transition-colors"></i>
                     autorush.fr/dashboard
                   </div>
-                  <div className="ml-auto text-xs text-neutral-600 font-medium">Glisser pour déplacer</div>
                 </div>
                 
                 <div className="flex h-[500px] bg-black/80">
@@ -701,7 +638,7 @@ export default function Home() {
               Rejoignez des centaines de créateurs qui utilisent AutoRush pour préparer leurs vidéos rapidement et efficacement.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="/register" className="w-full sm:w-auto px-8 py-4 bg-white text-black font-medium rounded-full hover:bg-neutral-200 transition-all transform hover:scale-105 active:scale-95">
+              <a href="/register" className="w-full sm:w-auto px-8 py-4 bg-white text-black font-medium rounded-full hover:bg-neutral-200 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center text-center">
                 Commencer gratuitement
               </a>
               <a href="/contact" className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all transform hover:scale-105 active:scale-95">
