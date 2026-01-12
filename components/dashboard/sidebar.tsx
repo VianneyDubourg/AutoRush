@@ -9,9 +9,11 @@ import {
   Video,
   Settings,
   History,
-  Zap
+  Zap,
+  Shield
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAdmin } from "@/hooks/use-admin"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -24,6 +26,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { isAdmin } = useAdmin()
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
@@ -52,6 +55,23 @@ export function Sidebar() {
             </Link>
           )
         })}
+        {isAdmin && (
+          <>
+            <div className="my-2 border-t" />
+            <Link
+              href="/dashboard/admin/users"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/dashboard/admin/users"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <Shield className="h-5 w-5" />
+              Administration
+            </Link>
+          </>
+        )}
       </nav>
     </div>
   )
