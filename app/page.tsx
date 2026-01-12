@@ -310,6 +310,7 @@ export default function Home() {
               <a href="/docs" className="w-full sm:w-auto px-8 py-3.5 bg-white/5 text-white border border-white/10 font-medium rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
                 <i data-lucide="book-open" className="w-4 h-4 text-neutral-400"></i>
                 Documentation
+                <i data-lucide="arrow-right" className="w-4 h-4"></i>
               </a>
             </div>
 
