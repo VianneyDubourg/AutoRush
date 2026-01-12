@@ -330,7 +330,7 @@ export default function Home() {
                       <div className="flex gap-2">
                         <div className="relative group">
                           <button className="px-3 py-1.5 rounded-md bg-white/5 text-xs text-neutral-400 border border-white/5 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2">
-                            Dernières 24h <i data-lucide="chevron-down" className="w-3 h-3"></i>
+                            Dernières 24h <ChevronDown className="w-3 h-3" />
                           </button>
                         </div>
                         <button className="p-1.5 rounded-md bg-white text-black hover:bg-neutral-200 hover:scale-105 transition-all active:scale-95">
