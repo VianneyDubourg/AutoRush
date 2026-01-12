@@ -115,7 +115,7 @@ export function OAuthButtons({ mode = "login" }: OAuthButtonsProps) {
           <Separator />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">
+          <span className="bg-background px-2 text-muted-foreground">
             Ou continuer avec
           </span>
         </div>

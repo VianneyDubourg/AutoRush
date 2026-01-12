@@ -10,14 +10,6 @@ import { supabase } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   Form,
   FormControl,
   FormField,
@@ -25,7 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Loader2, Zap } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Loader2, Zap, Github } from "lucide-react"
 import { OAuthButtons } from "@/components/auth/oauth-buttons"
 
 const loginSchema = z.object({
@@ -72,99 +65,108 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">AutoRush</span>
-            </div>
+    <div className="container relative hidden h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <Zap className="mr-2 h-6 w-6" />
+          AutoRush
+        </div>
+        <div className="relative z-20 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg">
+              &ldquo;Cet outil a transformé ma façon de travailler avec les vidéos. Simple, rapide et efficace.&rdquo;
+            </p>
+            <footer className="text-sm">Sofia Davis</footer>
+          </blockquote>
+        </div>
+      </div>
+      <div className="lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Se connecter
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Entrez vos identifiants pour accéder à votre compte
+            </p>
           </div>
-          <CardTitle className="text-2xl text-center">Connexion</CardTitle>
-          <CardDescription className="text-center">
-            Entrez vos identifiants pour accéder à votre compte
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="votre@email.com"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+          <div className="grid gap-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {error && (
+                  <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                    {error}
+                  </div>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mot de passe</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion en cours...
-                  </>
-                ) : (
-                  "Se connecter"
-                )}
-              </Button>
-            </form>
-          </Form>
-
-          <OAuthButtons mode="login" />
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-muted-foreground">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="nom@exemple.com"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mot de passe</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connexion...
+                    </>
+                  ) : (
+                    "Se connecter"
+                  )}
+                </Button>
+              </form>
+            </Form>
+            <OAuthButtons mode="login" />
+          </div>
+          <p className="px-8 text-center text-sm text-muted-foreground">
             <Link
               href="/forgot-password"
-              className="underline hover:text-primary"
+              className="hover:text-primary underline underline-offset-4"
             >
               Mot de passe oublié ?
             </Link>
-          </div>
-          <div className="text-sm text-center text-muted-foreground">
+            <br />
             Pas encore de compte ?{" "}
-            <Link href="/register" className="underline hover:text-primary">
+            <Link
+              href="/register"
+              className="hover:text-primary underline underline-offset-4"
+            >
               S'inscrire
             </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
