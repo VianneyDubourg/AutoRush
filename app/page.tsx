@@ -2,20 +2,33 @@
 
 import { useEffect } from "react"
 import Script from "next/script"
+import { 
+  Zap, 
+  ArrowRight, 
+  BookOpen, 
+  Lock, 
+  ChevronDown, 
+  LayoutGrid, 
+  Scissors, 
+  Frame, 
+  Video, 
+  Settings, 
+  Plus, 
+  Clock, 
+  Check, 
+  CheckCircle2,
+  Loader2,
+  Mail,
+  Github,
+  Twitter,
+  Linkedin,
+  Sparkles,
+  ArrowUpRight
+} from "lucide-react"
 
 export default function Home() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Initialize Lucide icons after a short delay to ensure script is loaded
-      const initIcons = () => {
-        if ((window as any).lucide) {
-          (window as any).lucide.createIcons()
-        } else {
-          setTimeout(initIcons, 100)
-        }
-      }
-      initIcons()
-
       // Live Data Simulation
       const updateStats = () => {
         // Vidéos traitées - légère variation
@@ -108,7 +121,6 @@ export default function Home() {
   return (
     <>
       <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
-      <Script src="https://unpkg.com/lucide@latest" strategy="beforeInteractive" />
       
       <div className="min-h-screen" style={{
         backgroundColor: "#000000",
@@ -201,7 +213,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="/" className="flex items-center gap-2 cursor-pointer group">
               <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center transition-transform group-hover:rotate-12">
-                <i data-lucide="zap" className="w-4 h-4 text-black"></i>
+                <Zap className="w-4 h-4 text-black" />
               </div>
               <span className="font-semibold tracking-tight text-white">autorush</span>
             </a>
@@ -248,12 +260,12 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 pointer-events-auto">
               <a href="/register" className="w-full sm:w-auto px-8 py-3.5 bg-white text-black font-medium rounded-full hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95 text-center">
                 <span>Commencer gratuitement</span>
-                <i data-lucide="arrow-right" className="w-4 h-4 flex-shrink-0"></i>
+                <ArrowRight className="w-4 h-4 flex-shrink-0" />
               </a>
               <a href="/docs" className="w-full sm:w-auto px-8 py-3.5 bg-white/5 text-white border border-white/10 font-medium rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95">
-                <i data-lucide="book-open" className="w-4 h-4 text-neutral-400"></i>
+                <BookOpen className="w-4 h-4 text-neutral-400" />
                 Documentation
-                <i data-lucide="arrow-right" className="w-4 h-4"></i>
+                <ArrowRight className="w-4 h-4" />
               </a>
             </div>
 
@@ -267,7 +279,7 @@ export default function Home() {
                     <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50 transition-colors"></div>
                   </div>
                   <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-white/5 rounded text-xs text-neutral-500 font-mono group/url">
-                    <i data-lucide="lock" className="w-3 h-3 group-hover/url:text-green-400 transition-colors"></i>
+                    <Lock className="w-3 h-3 group-hover/url:text-green-400 transition-colors" />
                     autorush.fr/dashboard
                   </div>
                 </div>
@@ -277,31 +289,31 @@ export default function Home() {
                     <div className="flex items-center gap-2 px-3 py-2 text-white bg-white/5 rounded-lg border border-white/5 mb-4 hover:border-white/20 cursor-pointer transition-colors">
                       <div className="w-5 h-5 bg-gradient-to-tr from-blue-500 to-blue-600 rounded flex items-center justify-center text-[10px] font-bold shadow-lg">AR</div>
                       <span className="text-sm font-medium">AutoRush</span>
-                      <i data-lucide="chevron-down" className="w-3 h-3 ml-auto text-neutral-500"></i>
+                      <ChevronDown className="w-3 h-3 ml-auto text-neutral-500" />
                     </div>
                     
                     <div className="space-y-0.5" id="sidebar-menu">
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'overview')} className="sidebar-item active px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
-                        <i data-lucide="layout-grid" className="w-4 h-4"></i>
+                        <LayoutGrid className="w-4 h-4" />
                         Vue d'ensemble
                       </div>
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'analytics')} className="sidebar-item px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
-                        <i data-lucide="scissors" className="w-4 h-4"></i>
+                        <Scissors className="w-4 h-4" />
                         AutoCut
                       </div>
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'deployments')} className="sidebar-item px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
-                        <i data-lucide="frame" className="w-4 h-4"></i>
+                        <Frame className="w-4 h-4" />
                         AutoFrame
                       </div>
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'team')} className="sidebar-item px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
-                        <i data-lucide="video" className="w-4 h-4"></i>
+                        <Video className="w-4 h-4" />
                         Mes vidéos
                       </div>
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-white/5">
                       <div className="px-3 py-2 text-sm text-neutral-400 hover:text-white hover:bg-white/5 rounded-md cursor-pointer flex items-center gap-3 transition-colors">
-                        <i data-lucide="settings" className="w-4 h-4"></i>
+                        <Settings className="w-4 h-4" />
                         Paramètres
                       </div>
                     </div>
@@ -333,7 +345,7 @@ export default function Home() {
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
-                              <i data-lucide="video" className="w-4 h-4"></i>
+                              <Video className="w-4 h-4" />
                             </div>
                             <span className="text-green-400 text-xs flex items-center gap-1">+23 <i data-lucide="arrow-up-right" className="w-3 h-3"></i></span>
                           </div>
@@ -353,7 +365,7 @@ export default function Home() {
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
-                              <i data-lucide="scissors" className="w-4 h-4"></i>
+                              <Scissors className="w-4 h-4" />
                             </div>
                             <span className="text-green-400 text-xs flex items-center gap-1">Suppressions</span>
                           </div>
@@ -363,7 +375,7 @@ export default function Home() {
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
-                              <i data-lucide="frame" className="w-4 h-4"></i>
+                              <Frame className="w-4 h-4" />
                             </div>
                             <span className="text-green-400 text-xs flex items-center gap-1">Adaptations</span>
                           </div>
