@@ -4,12 +4,134 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, Play, Pause, Download, Settings, Scissors } from "lucide-react"
-import { useState } from "react"
+import { Slider } from "@/components/ui/slider"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  Upload, 
+  Play, 
+  Pause, 
+  Download, 
+  Settings, 
+  Scissors,
+  Volume2,
+  Clock,
+  FileVideo,
+  X,
+  CheckCircle2,
+  Loader2
+} from "lucide-react"
+import { useState, useRef, useCallback } from "react"
+import { cn } from "@/lib/utils"
+
+interface Silence {
+  id: number
+  start: number
+  end: number
+  duration: number
+}
 
 export default function AutoCutPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasVideo, setHasVideo] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [videoDuration, setVideoDuration] = useState(154) // 2:34 en secondes
+  const [videoName, setVideoName] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [detectedSilences, setDetectedSilences] = useState<Silence[]>([])
+  const [processingProgress, setProcessingProgress] = useState(0)
+  
+  // Réglages
+  const [threshold, setThreshold] = useState(-40)
+  const [minDuration, setMinDuration] = useState(500)
+  const [padding, setPadding] = useState(100)
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
+
+  const handleFileSelect = (file: File) => {
+    if (file && file.type.startsWith('video/')) {
+      setVideoName(file.name)
+      setHasVideo(true)
+      setDetectedSilences([])
+      setCurrentTime(0)
+      setIsProcessing(false)
+    }
+  }
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileSelect(file)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFileSelect(file)
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleDetectSilences = () => {
+    setIsProcessing(true)
+    setProcessingProgress(0)
+    
+    // Simulation du traitement
+    const interval = setInterval(() => {
+      setProcessingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          setIsProcessing(false)
+          // Simuler des silences détectés
+          setDetectedSilences([
+            { id: 1, start: 5.2, end: 7.8, duration: 2.6 },
+            { id: 2, start: 12.5, end: 14.1, duration: 1.6 },
+            { id: 3, start: 23.4, end: 26.2, duration: 2.8 },
+            { id: 4, start: 45.7, end: 48.3, duration: 2.6 },
+            { id: 5, start: 67.2, end: 70.1, duration: 2.9 },
+            { id: 6, start: 89.5, end: 92.3, duration: 2.8 },
+            { id: 7, start: 112.8, end: 115.4, duration: 2.6 },
+            { id: 8, start: 134.2, end: 137.1, duration: 2.9 },
+          ])
+          return 100
+        }
+        return prev + 10
+      })
+    }, 200)
+  }
+
+  const totalSilenceTime = detectedSilences.reduce((acc, s) => acc + s.duration, 0)
+  const finalDuration = videoDuration - totalSilenceTime
+
+  // Génération de la waveform (simulée)
+  const generateWaveform = () => {
+    return Array.from({ length: 100 }, (_, i) => {
+      // Simuler des zones de silence avec des valeurs basses
+      const isSilence = detectedSilences.some(s => {
+        const position = (i / 100) * videoDuration
+        return position >= s.start && position <= s.end
+      })
+      return isSilence ? Math.random() * 15 + 5 : Math.random() * 80 + 20
+    })
+  }
+
+  const waveform = generateWaveform()
 
   return (
     <div className="space-y-6">
@@ -28,72 +150,203 @@ export default function AutoCutPage() {
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Preview vidéo</CardTitle>
-              <CardDescription>
-                Visualisez votre vidéo et les zones de silence détectées
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Preview vidéo</CardTitle>
+                  <CardDescription>
+                    {videoName || "Visualisez votre vidéo et les zones de silence détectées"}
+                  </CardDescription>
+                </div>
+                {hasVideo && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setHasVideo(false)
+                      setVideoName(null)
+                      setDetectedSilences([])
+                      setCurrentTime(0)
+                      setIsProcessing(false)
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+              <div
+                ref={dropZoneRef}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={cn(
+                  "aspect-video bg-muted rounded-lg flex items-center justify-center border-2 transition-colors",
+                  isDragging ? "border-primary bg-primary/5" : "border-dashed",
+                  hasVideo && "border-solid"
+                )}
+              >
                 {hasVideo ? (
-                  <div className="text-center space-y-4">
-                    <div className="w-full h-full bg-background rounded flex items-center justify-center">
-                      <div className="text-center space-y-2">
-                        <Play className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Preview vidéo</p>
+                  <div className="w-full h-full relative bg-background rounded overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <FileVideo className="h-16 w-16 mx-auto text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{videoName}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {formatTime(videoDuration)} • {videoDuration > 0 ? Math.round((videoDuration * 0.05)) : 0} MB
+                          </p>
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsPlaying(!isPlaying)}
+                          >
+                            {isPlaying ? (
+                              <Pause className="h-4 w-4 mr-2" />
+                            ) : (
+                              <Play className="h-4 w-4 mr-2" />
+                            )}
+                            {isPlaying ? "Pause" : "Lecture"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-2 justify-center">
-                      <Button variant="outline" size="sm">
-                        <Play className="h-4 w-4 mr-2" />
-                        Lecture
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Pause className="h-4 w-4 mr-2" />
-                        Pause
-                      </Button>
+                    
+                    {/* Timeline avec waveform */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-4 space-y-2">
+                      <div className="flex items-center justify-between text-white text-xs mb-2">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(videoDuration)}</span>
+                      </div>
+                      <div className="relative">
+                        <Slider
+                          value={[currentTime]}
+                          max={videoDuration}
+                          step={0.1}
+                          className="w-full"
+                          onValueChange={([value]) => setCurrentTime(value)}
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center space-y-4 p-8">
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <Upload className={cn(
+                      "h-12 w-12 mx-auto transition-colors",
+                      isDragging ? "text-primary" : "text-muted-foreground"
+                    )} />
                     <div>
-                      <p className="text-sm font-medium mb-1">Aucune vidéo chargée</p>
+                      <p className="text-sm font-medium mb-1">
+                        {isDragging ? "Déposez votre vidéo ici" : "Aucune vidéo chargée"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Glissez-déposez une vidéo ou cliquez pour télécharger
                       </p>
                     </div>
-                    <Button onClick={() => setHasVideo(true)}>
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      variant={isDragging ? "default" : "outline"}
+                    >
                       <Upload className="h-4 w-4 mr-2" />
                       Télécharger une vidéo
                     </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={handleFileInput}
+                    />
                   </div>
                 )}
               </div>
 
-              {/* Timeline Audio */}
+              {/* Timeline Audio avec waveform */}
               {hasVideo && (
                 <div className="mt-4 space-y-2">
-                  <Label>Timeline audio</Label>
-                  <div className="h-20 bg-muted rounded-lg border flex items-center p-2">
-                    <div className="w-full h-full flex items-end gap-px">
-                      {Array.from({ length: 50 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 bg-primary/60 rounded-sm"
-                          style={{ height: `${Math.random() * 80 + 20}%` }}
-                        />
-                      ))}
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Volume2 className="h-4 w-4" />
+                      Timeline audio
+                    </Label>
+                    <span className="text-xs text-muted-foreground">
+                      Zones rouges = silences détectés
+                    </span>
+                  </div>
+                  <div className="relative h-24 bg-muted rounded-lg border p-2">
+                    <div className="w-full h-full flex items-end gap-px relative">
+                      {waveform.map((height, i) => {
+                        const position = (i / waveform.length) * videoDuration
+                        const isInSilence = detectedSilences.some(s => 
+                          position >= s.start && position <= s.end
+                        )
+                        const isCurrentPosition = Math.abs(position - currentTime) < 0.5
+                        
+                        return (
+                          <div
+                            key={i}
+                            className={cn(
+                              "flex-1 rounded-sm transition-colors",
+                              isInSilence ? "bg-destructive/60" : "bg-primary/60",
+                              isCurrentPosition && "ring-2 ring-primary ring-offset-1"
+                            )}
+                            style={{ height: `${height}%` }}
+                          />
+                        )
+                      })}
                     </div>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>0:00</span>
-                    <span>2:34</span>
+                    <span>{formatTime(0)}</span>
+                    <span>{formatTime(videoDuration)}</span>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
+
+          {/* Liste des silences détectés */}
+          {detectedSilences.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Silences détectés ({detectedSilences.length})</CardTitle>
+                <CardDescription>
+                  Liste de tous les silences qui seront supprimés
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {detectedSilences.map((silence) => (
+                    <div
+                      key={silence.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded bg-destructive/20 flex items-center justify-center">
+                          <Volume2 className="h-5 w-5 text-destructive" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            Silence #{silence.id}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatTime(silence.start)} - {formatTime(silence.end)} 
+                            {" • "}
+                            {silence.duration.toFixed(1)}s
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Settings Panel */}
@@ -108,81 +361,139 @@ export default function AutoCutPage() {
                 Configurez la détection des silences
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="threshold">Seuil de silence (dB)</Label>
-                <Input
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="threshold">Seuil de silence</Label>
+                  <span className="text-sm text-muted-foreground">{threshold} dB</span>
+                </div>
+                <Slider
                   id="threshold"
-                  type="number"
-                  defaultValue="-40"
-                  min="-60"
-                  max="0"
+                  value={[threshold]}
+                  onValueChange={([value]) => setThreshold(value)}
+                  min={-60}
+                  max={0}
+                  step={1}
+                  className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Plus le seuil est bas, plus les silences sont détectés
+                  Plus le seuil est bas, plus les silences sont détectés. Recommandé: -40 dB
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="duration">Durée minimum (ms)</Label>
-                <Input
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="duration">Durée minimum</Label>
+                  <span className="text-sm text-muted-foreground">{minDuration} ms</span>
+                </div>
+                <Slider
                   id="duration"
-                  type="number"
-                  defaultValue="500"
-                  min="100"
-                  max="5000"
+                  value={[minDuration]}
+                  onValueChange={([value]) => setMinDuration(value)}
+                  min={100}
+                  max={5000}
+                  step={100}
+                  className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Durée minimum d'un silence pour être supprimé
+                  Durée minimum d'un silence pour être supprimé. Recommandé: 500 ms
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="padding">Padding (ms)</Label>
-                <Input
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="padding">Padding</Label>
+                  <span className="text-sm text-muted-foreground">{padding} ms</span>
+                </div>
+                <Slider
                   id="padding"
-                  type="number"
-                  defaultValue="100"
-                  min="0"
-                  max="1000"
+                  value={[padding]}
+                  onValueChange={([value]) => setPadding(value)}
+                  min={0}
+                  max={1000}
+                  step={50}
+                  className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Espace conservé avant et après chaque coupure
+                  Espace conservé avant et après chaque coupure. Recommandé: 100 ms
                 </p>
               </div>
+
+              {isProcessing && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Traitement en cours...</span>
+                    <span className="font-medium">{processingProgress}%</span>
+                  </div>
+                  <Progress value={processingProgress} />
+                </div>
+              )}
 
               <Button
                 className="w-full"
-                onClick={() => setIsProcessing(!isProcessing)}
-                disabled={!hasVideo}
+                onClick={handleDetectSilences}
+                disabled={!hasVideo || isProcessing}
               >
-                <Scissors className="h-4 w-4 mr-2" />
-                {isProcessing ? "Traitement en cours..." : "Détecter les silences"}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Traitement...
+                  </>
+                ) : (
+                  <>
+                    <Scissors className="h-4 w-4 mr-2" />
+                    Détecter les silences
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
 
-          {hasVideo && (
+          {/* Résultats */}
+          {(detectedSilences.length > 0 || isProcessing) && (
             <Card>
               <CardHeader>
                 <CardTitle>Résultats</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Silences détectés</span>
-                    <span className="font-medium">12</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Silences détectés
+                    </span>
+                    <span className="font-medium">{detectedSilences.length}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Temps économisé</span>
-                    <span className="font-medium">1m 23s</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Temps économisé
+                    </span>
+                    <span className="font-medium">{formatTime(totalSilenceTime)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Durée finale</span>
-                    <span className="font-medium">2m 15s</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Durée originale</span>
+                    <span className="font-medium">{formatTime(videoDuration)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-sm font-medium">Durée finale</span>
+                    <span className="text-lg font-bold text-primary">{formatTime(finalDuration)}</span>
+                  </div>
+                  <div className="pt-2">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                      <span>Réduction</span>
+                      <span>{((totalSilenceTime / videoDuration) * 100).toFixed(1)}%</span>
+                    </div>
+                    <Progress 
+                      value={(totalSilenceTime / videoDuration) * 100} 
+                      className="h-2"
+                    />
                   </div>
                 </div>
-                <Button className="w-full" disabled={!isProcessing}>
+                <Button 
+                  className="w-full" 
+                  disabled={isProcessing || detectedSilences.length === 0}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Télécharger la vidéo traitée
                 </Button>

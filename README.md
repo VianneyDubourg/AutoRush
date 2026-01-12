@@ -1,6 +1,21 @@
 # AutoRush
 
-Application web AutoRush - Tableau de bord utilisateur
+AutoRush est un outil simple et accessible qui aide les créateurs vidéo à nettoyer et préparer leurs vidéos avant diffusion. 
+
+## Fonctionnalités principales
+
+### AutoCut
+Supprime intelligemment les silences d'une vidéo avec :
+- Interface avec preview vidéo
+- Timeline audio pour visualiser les silences
+- Réglages simples (seuil, durée, padding)
+
+### AutoFrame
+Adapte une vidéo à différents formats :
+- 16:9 (Landscape) - Format horizontal classique
+- 9:16 (Vertical) - Format vertical pour réseaux sociaux
+- 1:1 (Carré) - Format carré pour Instagram
+- Ajustement automatique du cadrage et du regard dans le cadre
 
 ## Technologies
 
@@ -32,6 +47,11 @@ npm run dev
 AutoRush/
 ├── app/                    # Pages Next.js (App Router)
 │   ├── dashboard/         # Pages du dashboard
+│   │   ├── autocut/       # Page AutoCut
+│   │   ├── autoframe/     # Page AutoFrame
+│   │   ├── videos/        # Gestion des vidéos
+│   │   ├── history/       # Historique des traitements
+│   │   └── settings/      # Paramètres
 │   ├── layout.tsx         # Layout principal
 │   └── globals.css        # Styles globaux
 ├── components/            # Composants React
@@ -43,11 +63,13 @@ AutoRush/
 
 ## Fonctionnalités
 
-- ✅ Dashboard utilisateur avec statistiques
-- ✅ Navigation latérale
-- ✅ En-tête avec recherche et profil utilisateur
-- ✅ Design moderne et responsive
-- ✅ Dark mode prêt (à activer)
+- ✅ Dashboard avec statistiques vidéo
+- ✅ AutoCut - Suppression intelligente des silences
+- ✅ AutoFrame - Adaptation de formats vidéo
+- ✅ Gestion des vidéos traitées
+- ✅ Historique des traitements
+- ✅ Paramètres personnalisables
+- ✅ Interface moderne et responsive
 
 ## Développement
 
