@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation"
 import { Users, Shield, Crown, Sparkles, Save, Loader2 } from "lucide-react"
 import { useAdmin } from "@/hooks/use-admin"
 import { Badge } from "@/components/ui/badge"
+import { getAllUsersFromProfiles, type UserComplete } from "@/lib/supabase/users"
 
 interface UserProfile {
   id: string
@@ -24,6 +25,8 @@ interface UserProfile {
   is_admin: boolean
   subscription_plan: 'free' | 'pro' | 'enterprise'
   created_at: string
+  last_sign_in_at?: string | null
+  email_confirmed_at?: string | null
 }
 
 export default function AdminUsersPage() {
