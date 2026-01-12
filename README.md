@@ -24,6 +24,7 @@ Adapte une vidéo à différents formats :
 - **Shadcn UI** - Composants UI modernes
 - **Tailwind CSS** - Styling utilitaire
 - **Radix UI** - Composants accessibles
+- **Supabase** - Authentification et base de données
 
 ## Installation
 
@@ -33,13 +34,29 @@ Adapte une vidéo à différents formats :
 npm install
 ```
 
-2. Lancez le serveur de développement :
+2. Configurez Supabase :
+
+Créez un fichier `.env.local` à la racine du projet :
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon
+```
+
+Pour obtenir ces valeurs :
+- Créez un projet sur [supabase.com](https://supabase.com)
+- Allez dans Settings > API
+- Copiez l'URL du projet et la clé anonyme (anon key)
+
+Voir `SUPABASE_SETUP.md` pour plus de détails.
+
+3. Lancez le serveur de développement :
 
 ```bash
 npm run dev
 ```
 
-3. Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+4. Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## Structure du projet
 

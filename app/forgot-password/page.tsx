@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { supabase } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -23,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Loader2, Zap, ArrowLeft } from "lucide-react"
+import { Loader2, Zap } from "lucide-react"
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -32,8 +34,10 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -44,13 +48,21 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true)
+    setError(null)
+    setSuccess(false)
 
     try {
-      // Implémenter l'envoi d'email de réinitialisation
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setIsSubmitted(true)
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (resetError) {
+        setError(resetError.message || "Erreur lors de l'envoi de l'email")
+      } else {
+        setSuccess(true)
+      }
     } catch (err) {
-      // Gérer l'erreur
+      setError("Une erreur est survenue. Veuillez réessayer.")
     } finally {
       setIsLoading(false)
     }
@@ -68,65 +80,61 @@ export default function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl text-center">Mot de passe oublié</CardTitle>
           <CardDescription className="text-center">
-            {isSubmitted
-              ? "Un email de réinitialisation vous a été envoyé"
-              : "Entrez votre email pour recevoir un lien de réinitialisation"}
+            Entrez votre email pour recevoir un lien de réinitialisation
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isSubmitted ? (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-primary/10 p-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Si un compte existe avec cet email, vous recevrez un lien pour réinitialiser votre mot de passe.
-                </p>
-              </div>
-              <Link href="/login">
-                <Button variant="outline" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Retour à la connexion
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="votre@email.com"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {error && (
+                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
+                  Un email de réinitialisation a été envoyé à votre adresse.
+                </div>
+              )}
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="votre@email.com"
+                        disabled={isLoading || success}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Envoi en cours...
-                    </>
-                  ) : (
-                    "Envoyer le lien de réinitialisation"
-                  )}
-                </Button>
-              </form>
-            </Form>
-          )}
+              <Button type="submit" className="w-full" disabled={isLoading || success}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  "Envoyer le lien de réinitialisation"
+                )}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
-        <CardFooter>
-          <div className="text-sm text-center text-muted-foreground w-full">
-            <Link href="/login" className="underline hover:text-primary">
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-center text-muted-foreground">
+            <Link
+              href="/login"
+              className="underline hover:text-primary"
+            >
               Retour à la connexion
             </Link>
           </div>

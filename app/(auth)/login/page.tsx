@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { authClient } from "@/lib/auth-client"
+import { supabase } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -53,14 +53,14 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const result = await authClient.signIn.email({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
 
-      if (result.error) {
-        setError(result.error.message || "Erreur lors de la connexion")
-      } else {
+      if (authError) {
+        setError(authError.message || "Erreur lors de la connexion")
+      } else if (authData.user) {
         router.push("/dashboard")
         router.refresh()
       }

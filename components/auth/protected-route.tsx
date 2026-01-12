@@ -2,12 +2,12 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { useSession } from "@/hooks/use-session"
 import { Loader2 } from "lucide-react"
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { data: session, isPending } = authClient.useSession()
+  const { data: session, isPending } = useSession()
 
   useEffect(() => {
     if (!isPending && !session) {

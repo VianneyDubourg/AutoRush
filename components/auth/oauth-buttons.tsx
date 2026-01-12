@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { supabase } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
@@ -83,11 +83,16 @@ export function OAuthButtons({ mode = "login" }: OAuthButtonsProps) {
   const handleOAuth = async (providerId: string) => {
     setLoading(providerId)
     try {
-      // BetterAuth redirige automatiquement vers le provider OAuth
-      await authClient.signIn.social({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: providerId as "google" | "github" | "apple" | "discord",
-        callbackURL: "/dashboard",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
       })
+      if (error) {
+        console.error("OAuth error:", error)
+        setLoading(null)
+      }
     } catch (error) {
       console.error("OAuth error:", error)
       setLoading(null)

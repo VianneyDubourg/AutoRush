@@ -2,7 +2,8 @@
 
 import { Bell, Search, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { supabase } from "@/lib/auth-client"
+import { useSession } from "@/hooks/use-session"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -17,10 +18,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export function Header() {
   const router = useRouter()
-  const { data: session } = authClient.useSession()
+  const { data: session } = useSession()
 
   const handleSignOut = async () => {
-    await authClient.signOut()
+    await supabase.auth.signOut()
     router.push("/login")
     router.refresh()
   }
