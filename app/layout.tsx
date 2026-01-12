@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/auth/session-provider";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AutoRush - Dashboard",
-  description: "Application AutoRush - Tableau de bord utilisateur",
+  title: "AutoRush - Préparez vos vidéos en quelques clics",
+  description: "Supprimez intelligemment les silences et adaptez vos formats avec AutoCut et AutoFrame. L'outil simple pour les créateurs vidéo.",
 };
 
 export default function RootLayout({
@@ -18,7 +19,9 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
