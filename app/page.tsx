@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState, useCallback } from "react"
 import Script from "next/script"
 import { 
   Zap, 
@@ -27,6 +27,28 @@ import {
 } from "lucide-react"
 
 export default function Home() {
+  const showTooltip = useCallback((element: HTMLElement, value: string) => {
+    if (typeof window === 'undefined') return
+    const tooltip = document.getElementById('tooltip')
+    if (tooltip) {
+      tooltip.innerText = value + ' vidéos/h'
+      tooltip.style.opacity = '1'
+      
+      const rect = element.getBoundingClientRect()
+      const parentRect = element.parentElement?.getBoundingClientRect()
+      if (parentRect) {
+        const left = rect.left - parentRect.left
+        tooltip.style.left = (left - 10) + 'px'
+      }
+    }
+  }, [])
+
+  const hideTooltip = useCallback(() => {
+    if (typeof window === 'undefined') return
+    const tooltip = document.getElementById('tooltip')
+    if (tooltip) tooltip.style.opacity = '0'
+  }, [])
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Live Data Simulation
@@ -91,26 +113,9 @@ export default function Home() {
         }
       }
 
-      // Chart Tooltip Logic
-      ;(window as any).showTooltip = (element: HTMLElement, value: string) => {
-        const tooltip = document.getElementById('tooltip')
-        if (tooltip) {
-          tooltip.innerText = value + ' vidéos/h'
-          tooltip.style.opacity = '1'
-          
-          const rect = element.getBoundingClientRect()
-          const parentRect = element.parentElement?.getBoundingClientRect()
-          if (parentRect) {
-            const left = rect.left - parentRect.left
-            tooltip.style.left = (left - 10) + 'px'
-          }
-        }
-      }
-
-      ;(window as any).hideTooltip = () => {
-        const tooltip = document.getElementById('tooltip')
-        if (tooltip) tooltip.style.opacity = '0'
-      }
+      // Chart Tooltip Logic - fonctions assignées pour compatibilité
+      ;(window as any).showTooltip = showTooltip
+      ;(window as any).hideTooltip = hideTooltip
 
       return () => {
         clearInterval(statsInterval)
@@ -396,15 +401,15 @@ export default function Home() {
                         <div className="flex items-end justify-between gap-1 h-24 mt-4 relative" id="chart-bars">
                           <div id="tooltip" className="absolute -top-8 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 transition-opacity pointer-events-none z-20 whitespace-nowrap">240 vidéos/h</div>
                           
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[40%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '124')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[60%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '210')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[55%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '185')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[75%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '320')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[45%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '150')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/10 rounded-t-sm h-[85%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '380')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[70%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '290')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[65%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '240')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-blue-500 rounded-t-sm h-[90%] shadow-[0_0_15px_rgba(59,130,246,0.5)]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '410')} onMouseOut={(window as any).hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[40%]" onMouseOver={(e) => showTooltip(e.currentTarget, '124')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[60%]" onMouseOver={(e) => showTooltip(e.currentTarget, '210')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[55%]" onMouseOver={(e) => showTooltip(e.currentTarget, '185')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[75%]" onMouseOver={(e) => showTooltip(e.currentTarget, '320')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[45%]" onMouseOver={(e) => showTooltip(e.currentTarget, '150')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/10 rounded-t-sm h-[85%]" onMouseOver={(e) => showTooltip(e.currentTarget, '380')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[70%]" onMouseOver={(e) => showTooltip(e.currentTarget, '290')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[65%]" onMouseOver={(e) => showTooltip(e.currentTarget, '240')} onMouseOut={hideTooltip}></div>
+                          <div className="chart-bar w-full bg-blue-500 rounded-t-sm h-[90%] shadow-[0_0_15px_rgba(59,130,246,0.5)]" onMouseOver={(e) => showTooltip(e.currentTarget, '410')} onMouseOut={hideTooltip}></div>
                         </div>
                       </div>
                     </div>
