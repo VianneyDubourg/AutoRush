@@ -347,7 +347,7 @@ export default function Home() {
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
                               <Video className="w-4 h-4" />
                             </div>
-                            <span className="text-green-400 text-xs flex items-center gap-1">+23 <i data-lucide="arrow-up-right" className="w-3 h-3"></i></span>
+                            <span className="text-green-400 text-xs flex items-center gap-1">+23 <ArrowUpRight className="w-3 h-3" /></span>
                           </div>
                           <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-videos">127</span></div>
                           <div className="text-xs text-neutral-500">Vidéos traitées</div>
@@ -416,17 +416,17 @@ export default function Home() {
                           <h3 className="text-sm font-medium text-white mb-4">Mes vidéos AutoCut</h3>
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <Video className="w-4 h-4 text-neutral-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">video_tutoriel.mp4</span>
                               <span className="text-xs text-neutral-500">Il y a 2h</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <Video className="w-4 h-4 text-neutral-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">interview_clean.mp4</span>
                               <span className="text-xs text-neutral-500">Hier</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <Video className="w-4 h-4 text-neutral-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">presentation_short.mp4</span>
                               <span className="text-xs text-neutral-500">Il y a 3j</span>
                             </div>
@@ -459,19 +459,19 @@ export default function Home() {
                           <h3 className="text-sm font-medium text-white mb-4">Mes vidéos AutoFrame</h3>
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <Frame className="w-4 h-4 text-blue-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">presentation_vertical.mp4</span>
                               <span className="text-xs text-neutral-500">16:9 → 9:16</span>
                               <span className="text-xs text-neutral-500">Il y a 5h</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <Frame className="w-4 h-4 text-blue-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">video_carre.mp4</span>
                               <span className="text-xs text-neutral-500">16:9 → 1:1</span>
                               <span className="text-xs text-neutral-500">Il y a 1j</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <Frame className="w-4 h-4 text-blue-400" />
                               <span className="text-xs text-neutral-400 font-mono flex-1">tutoriel_format.mp4</span>
                               <span className="text-xs text-neutral-500">16:9 → 4:5</span>
                               <span className="text-xs text-neutral-500">Il y a 2j</span>
@@ -502,7 +502,7 @@ export default function Home() {
                     <div id="view-team" className="view-content fade-in">
                       <div className="space-y-3">
                         <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
-                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <Video className="w-8 h-8 text-neutral-400" />
                           <div className="flex-1 space-y-1">
                             <p className="text-sm font-medium text-white">video_tutoriel.mp4</p>
                             <p className="text-xs text-neutral-500">AutoCut • Il y a 2 heures</p>
@@ -512,7 +512,7 @@ export default function Home() {
                           </button>
                         </div>
                         <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
-                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <Video className="w-8 h-8 text-neutral-400" />
                           <div className="flex-1 space-y-1">
                             <p className="text-sm font-medium text-white">presentation_vertical.mp4</p>
                             <p className="text-xs text-neutral-500">AutoFrame • Il y a 5 heures</p>
@@ -522,7 +522,7 @@ export default function Home() {
                           </button>
                         </div>
                         <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
-                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <Video className="w-8 h-8 text-neutral-400" />
                           <div className="flex-1 space-y-1">
                             <p className="text-sm font-medium text-white">interview_clean.mp4</p>
                             <p className="text-xs text-neutral-500">AutoCut • Hier</p>
@@ -608,15 +608,15 @@ export default function Home() {
                 </p>
                 <ul className="space-y-4">
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
+                    <Check className="w-4 h-4 text-blue-500" />
                     Détection automatique des silences
                   </li>
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
+                    <Check className="w-4 h-4 text-blue-500" />
                     Réglages personnalisables
                   </li>
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
+                    <Check className="w-4 h-4 text-blue-500" />
                     Prévisualisation en temps réel
                   </li>
                 </ul>
@@ -707,19 +707,19 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5">
               <div className="flex items-center gap-3 mb-4 md:mb-0">
                 <div className="w-6 h-6 bg-white/10 rounded-md flex items-center justify-center border border-white/10">
-                  <i data-lucide="zap" className="w-3 h-3 text-white"></i>
+                  <Zap className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-neutral-500 text-sm">© 2024 AutoRush</span>
               </div>
               <div className="flex gap-6">
                 <a href="https://github.com/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <i data-lucide="github" className="w-4 h-4"></i>
+                  <Github className="w-4 h-4" />
                 </a>
                 <a href="https://twitter.com/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <i data-lucide="twitter" className="w-4 h-4"></i>
+                  <Twitter className="w-4 h-4" />
                 </a>
                 <a href="https://linkedin.com/company/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <i data-lucide="linkedin" className="w-4 h-4"></i>
+                  <Linkedin className="w-4 h-4" />
                 </a>
               </div>
             </div>
