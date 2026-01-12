@@ -67,28 +67,35 @@ export default function Home() {
         document.addEventListener("mouseup", dragEnd)
         document.addEventListener("mousemove", drag)
 
-        // Live Data Simulation
-        const updateStats = () => {
-          const latency = document.getElementById('stat-latency')
-          if (latency) {
-            const currentLat = parseFloat(latency.innerText)
-            const newLat = (currentLat + (Math.random() - 0.5) * 5).toFixed(1)
-            latency.innerText = parseFloat(newLat) > 20 ? newLat : "20.0"
-          }
-
-          if(Math.random() > 0.95) {
-            const uptime = document.getElementById('stat-uptime')
-            if(uptime) uptime.innerText = Math.random() > 0.5 ? '9' : '8'
-          }
-
-          if(Math.random() > 0.7) {
-            const req = document.getElementById('stat-req')
-            if(req) {
-              const val = parseFloat(req.innerText)
-              req.innerText = (val + 0.001).toFixed(3)
+          // Live Data Simulation
+          const updateStats = () => {
+            // Vidéos traitées - légère variation
+            if(Math.random() > 0.8) {
+              const videos = document.getElementById('stat-videos')
+              if(videos) {
+                const val = parseInt(videos.innerText)
+                videos.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
+              }
+            }
+            
+            // AutoCut - légère variation
+            if(Math.random() > 0.85) {
+              const autocut = document.getElementById('stat-autocut')
+              if(autocut) {
+                const val = parseInt(autocut.innerText)
+                autocut.innerText = (val + (Math.random() > 0.5 ? 1 : 0)).toString()
+              }
+            }
+            
+            // AutoFrame - légère variation
+            if(Math.random() > 0.9) {
+              const autoframe = document.getElementById('stat-autoframe')
+              if(autoframe) {
+                const val = parseInt(autoframe.innerText)
+                autoframe.innerText = (val + (Math.random() > 0.7 ? 1 : 0)).toString()
+              }
             }
           }
-        }
         const statsInterval = setInterval(updateStats, 2000)
 
         // Sidebar Navigation Logic
@@ -157,10 +164,8 @@ export default function Home() {
     <>
       <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
       <Script src="https://unpkg.com/lucide@latest" strategy="beforeInteractive" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       
       <div className="min-h-screen" style={{
-        fontFamily: "'Inter', sans-serif",
         backgroundColor: "#000000",
         color: "#ffffff",
         overflowX: "hidden"
@@ -283,7 +288,7 @@ export default function Home() {
         <section className="relative pt-32 pb-20 overflow-hidden min-h-screen">
           <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-grid [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[100px]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px]"></div>
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px]"></div>
           </div>
 
@@ -333,7 +338,7 @@ export default function Home() {
                 <div className="flex h-[500px] bg-black/80">
                   <div className="w-64 border-r border-white/5 p-4 flex flex-col gap-1 hidden md:flex bg-black/20">
                     <div className="flex items-center gap-2 px-3 py-2 text-white bg-white/5 rounded-lg border border-white/5 mb-4 hover:border-white/20 cursor-pointer transition-colors">
-                      <div className="w-5 h-5 bg-gradient-to-tr from-purple-500 to-blue-500 rounded flex items-center justify-center text-[10px] font-bold shadow-lg">AR</div>
+                      <div className="w-5 h-5 bg-gradient-to-tr from-blue-500 to-blue-600 rounded flex items-center justify-center text-[10px] font-bold shadow-lg">AR</div>
                       <span className="text-sm font-medium">AutoRush</span>
                       <i data-lucide="chevron-down" className="w-3 h-3 ml-auto text-neutral-500"></i>
                     </div>
@@ -366,7 +371,7 @@ export default function Home() {
                   </div>
 
                   <div className="flex-1 p-8 relative overflow-y-auto" id="main-view">
-                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px] pointer-events-none"></div>
 
                     <div className="flex items-center justify-between mb-8 fade-in sticky top-0 z-30">
                       <h2 className="text-lg font-medium text-white flex items-center gap-2">
@@ -387,15 +392,15 @@ export default function Home() {
 
                     {/* OVERVIEW CONTENT */}
                     <div id="view-overview" className="view-content active fade-in">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:scale-110 transition-transform">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
                               <i data-lucide="video" className="w-4 h-4"></i>
                             </div>
-                            <span className="text-green-400 text-xs flex items-center gap-1">+23% <i data-lucide="arrow-up-right" className="w-3 h-3"></i></span>
+                            <span className="text-green-400 text-xs flex items-center gap-1">+23 <i data-lucide="arrow-up-right" className="w-3 h-3"></i></span>
                           </div>
-                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-latency">127</span><span className="text-sm font-normal text-neutral-500 ml-1 font-sans"></span></div>
+                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-videos">127</span></div>
                           <div className="text-xs text-neutral-500">Vidéos traitées</div>
                         </div>
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
@@ -403,20 +408,30 @@ export default function Home() {
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
                               <i data-lucide="clock" className="w-4 h-4"></i>
                             </div>
-                            <span className="text-green-400 text-xs flex items-center gap-1">+15% <i data-lucide="arrow-up-right" className="w-3 h-3"></i></span>
+                            <span className="text-green-400 text-xs flex items-center gap-1">Ce mois-ci</span>
                           </div>
-                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-req">8h</span> 42m</div>
+                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-time">8h</span> 42m</div>
                           <div className="text-xs text-neutral-500">Temps économisé</div>
                         </div>
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
-                            <div className="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:scale-110 transition-transform">
-                              <i data-lucide="check-circle" className="w-4 h-4"></i>
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
+                              <i data-lucide="scissors" className="w-4 h-4"></i>
                             </div>
-                            <span className="text-neutral-500 text-xs">Stable</span>
+                            <span className="text-green-400 text-xs flex items-center gap-1">Suppressions</span>
                           </div>
-                          <div className="text-2xl font-semibold text-white mb-1 font-mono">98<span id="stat-uptime">%</span></div>
-                          <div className="text-xs text-neutral-500">Satisfaction</div>
+                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-autocut">89</span></div>
+                          <div className="text-xs text-neutral-500">AutoCut utilisés</div>
+                        </div>
+                        <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
+                              <i data-lucide="frame" className="w-4 h-4"></i>
+                            </div>
+                            <span className="text-green-400 text-xs flex items-center gap-1">Adaptations</span>
+                          </div>
+                          <div className="text-2xl font-semibold text-white mb-1 font-mono"><span id="stat-autoframe">38</span></div>
+                          <div className="text-xs text-neutral-500">AutoFrame utilisés</div>
                         </div>
                       </div>
 
@@ -424,8 +439,8 @@ export default function Home() {
                         <div className="flex justify-between items-center z-10">
                           <h3 className="text-sm font-medium text-neutral-300">Activité</h3>
                           <div className="flex gap-2">
-                            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-blue-600"></div>
                           </div>
                         </div>
                         
@@ -440,101 +455,132 @@ export default function Home() {
                           <div className="chart-bar w-full bg-white/10 rounded-t-sm h-[85%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '380')} onMouseOut={(window as any).hideTooltip}></div>
                           <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[70%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '290')} onMouseOut={(window as any).hideTooltip}></div>
                           <div className="chart-bar w-full bg-white/5 rounded-t-sm h-[65%]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '240')} onMouseOut={(window as any).hideTooltip}></div>
-                          <div className="chart-bar w-full bg-purple-500 rounded-t-sm h-[90%] shadow-[0_0_15px_rgba(168,85,247,0.5)]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '410')} onMouseOut={(window as any).hideTooltip}></div>
+                          <div className="chart-bar w-full bg-blue-500 rounded-t-sm h-[90%] shadow-[0_0_15px_rgba(59,130,246,0.5)]" onMouseOver={(e) => (window as any).showTooltip(e.currentTarget, '410')} onMouseOut={(window as any).hideTooltip}></div>
                         </div>
                       </div>
                     </div>
 
-                    {/* ANALYTICS CONTENT */}
+                    {/* ANALYTICS CONTENT - AutoCut */}
                     <div id="view-analytics" className="view-content fade-in">
                       <div className="grid grid-cols-1 gap-6">
                         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
-                          <h3 className="text-sm font-medium text-white mb-4">Vidéos récentes</h3>
+                          <h3 className="text-sm font-medium text-white mb-4">Mes vidéos AutoCut</h3>
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                              <span className="text-xs text-neutral-400 font-mono w-32">video_1.mp4</span>
-                              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500 w-[85%] rounded-full"></div>
-                              </div>
-                              <span className="text-xs text-white w-10 text-right">85%</span>
+                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">video_tutoriel.mp4</span>
+                              <span className="text-xs text-neutral-500">Il y a 2h</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-xs text-neutral-400 font-mono w-32">video_2.mp4</span>
-                              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 w-[60%] rounded-full"></div>
-                              </div>
-                              <span className="text-xs text-white w-10 text-right">60%</span>
+                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">interview_clean.mp4</span>
+                              <span className="text-xs text-neutral-500">Hier</span>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-xs text-neutral-400 font-mono w-32">video_3.mp4</span>
-                              <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500/70 w-[35%] rounded-full"></div>
-                              </div>
-                              <span className="text-xs text-white w-10 text-right">35%</span>
+                              <i data-lucide="video" className="w-4 h-4 text-neutral-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">presentation_short.mp4</span>
+                              <span className="text-xs text-neutral-500">Il y a 3j</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
+                          <h3 className="text-sm font-medium text-white mb-4">Statistiques AutoCut</h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Vidéos traitées</span>
+                              <span className="text-sm font-medium text-white">89</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Temps économisé</span>
+                              <span className="text-sm font-medium text-white">~6h 30m</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Silences supprimés</span>
+                              <span className="text-sm font-medium text-white">1,247</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* DEPLOYMENTS CONTENT */}
+                    {/* DEPLOYMENTS CONTENT - AutoFrame */}
                     <div id="view-deployments" className="view-content fade-in">
-                      <div className="space-y-3">
-                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-                              <i data-lucide="check" className="w-4 h-4"></i>
+                      <div className="grid grid-cols-1 gap-6">
+                        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
+                          <h3 className="text-sm font-medium text-white mb-4">Mes vidéos AutoFrame</h3>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">presentation_vertical.mp4</span>
+                              <span className="text-xs text-neutral-500">16:9 → 9:16</span>
+                              <span className="text-xs text-neutral-500">Il y a 5h</span>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium text-white">Format 16:9 appliqué</div>
-                              <div className="text-[10px] text-neutral-500 font-mono">Il y a 2m • video_1.mp4</div>
+                            <div className="flex items-center gap-4">
+                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">video_carre.mp4</span>
+                              <span className="text-xs text-neutral-500">16:9 → 1:1</span>
+                              <span className="text-xs text-neutral-500">Il y a 1j</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <i data-lucide="frame" className="w-4 h-4 text-blue-400"></i>
+                              <span className="text-xs text-neutral-400 font-mono flex-1">tutoriel_format.mp4</span>
+                              <span className="text-xs text-neutral-500">16:9 → 4:5</span>
+                              <span className="text-xs text-neutral-500">Il y a 2j</span>
                             </div>
                           </div>
-                          <span className="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold border border-green-500/20">TERMINÉ</span>
                         </div>
-                        
-                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 animate-pulse">
-                              <i data-lucide="loader-2" className="w-4 h-4 animate-spin"></i>
+                        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
+                          <h3 className="text-sm font-medium text-white mb-4">Statistiques AutoFrame</h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Vidéos adaptées</span>
+                              <span className="text-sm font-medium text-white">38</span>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium text-white">Suppression des silences</div>
-                              <div className="text-[10px] text-neutral-500 font-mono">Il y a 15m • video_2.mp4</div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Format le plus utilisé</span>
+                              <span className="text-sm font-medium text-white">9:16</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-neutral-400">Total formats</span>
+                              <span className="text-sm font-medium text-white">3</span>
                             </div>
                           </div>
-                          <span className="px-2 py-1 rounded bg-yellow-500/10 text-yellow-500 text-[10px] font-bold border border-yellow-500/20">EN COURS</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* TEAM CONTENT */}
+                    {/* TEAM CONTENT - Mes vidéos */}
                     <div id="view-team" className="view-content fade-in">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/[0.02]">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white">
-                              <i data-lucide="video" className="w-5 h-5"></i>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-white">video_tutoriel.mp4</div>
-                              <div className="text-[10px] text-neutral-500">AutoCut • 2:34</div>
-                            </div>
+                      <div className="space-y-3">
+                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
+                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium text-white">video_tutoriel.mp4</p>
+                            <p className="text-xs text-neutral-500">AutoCut • Il y a 2 heures</p>
                           </div>
-                          <div className="px-2 py-1 bg-white/5 rounded text-[10px] text-neutral-400">2h</div>
+                          <button className="px-3 py-1 rounded-md bg-white/5 text-xs text-neutral-400 border border-white/5 hover:bg-white/10 hover:text-white transition-colors">
+                            Voir
+                          </button>
                         </div>
-                        
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/[0.02]">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
-                              <i data-lucide="frame" className="w-5 h-5"></i>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-white">presentation.mp4</div>
-                              <div className="text-[10px] text-neutral-500">AutoFrame • 5:12</div>
-                            </div>
+                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
+                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium text-white">presentation_vertical.mp4</p>
+                            <p className="text-xs text-neutral-500">AutoFrame • Il y a 5 heures</p>
                           </div>
-                          <div className="px-2 py-1 bg-white/5 rounded text-[10px] text-neutral-400">5h</div>
+                          <button className="px-3 py-1 rounded-md bg-white/5 text-xs text-neutral-400 border border-white/5 hover:bg-white/10 hover:text-white transition-colors">
+                            Voir
+                          </button>
+                        </div>
+                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors flex items-center gap-4">
+                          <i data-lucide="video" className="w-8 h-8 text-neutral-400"></i>
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium text-white">interview_clean.mp4</p>
+                            <p className="text-xs text-neutral-500">AutoCut • Hier</p>
+                          </div>
+                          <button className="px-3 py-1 rounded-md bg-white/5 text-xs text-neutral-400 border border-white/5 hover:bg-white/10 hover:text-white transition-colors">
+                            Voir
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -574,8 +620,8 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="group p-8 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300">
-                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300">
-                  <i data-lucide="scissors" className="w-6 h-6 text-purple-400"></i>
+                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-300">
+                  <i data-lucide="scissors" className="w-6 h-6 text-blue-400"></i>
                 </div>
                 <h3 className="text-xl font-medium text-white mb-3">AutoCut</h3>
                 <p className="text-neutral-400 leading-relaxed">
@@ -613,27 +659,27 @@ export default function Home() {
                 </p>
                 <ul className="space-y-4">
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-purple-500"></i>
+                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
                     Détection automatique des silences
                   </li>
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-purple-500"></i>
+                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
                     Réglages personnalisables
                   </li>
                   <li className="flex items-center gap-3 text-sm text-neutral-300">
-                    <i data-lucide="check" className="w-4 h-4 text-purple-500"></i>
+                    <i data-lucide="check" className="w-4 h-4 text-blue-500"></i>
                     Prévisualisation en temps réel
                   </li>
                 </ul>
               </div>
               <div className="bg-black/20 border-l border-white/5 p-8 flex items-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 <div className="w-full rounded-lg bg-[#0A0A0A] border border-white/5 p-4 font-mono text-sm overflow-x-auto shadow-2xl relative z-10 transition-transform group-hover:scale-[1.01] duration-500">
                   <div className="flex gap-1.5 mb-4">
                     <div className="w-2.5 h-2.5 rounded-full bg-white/20"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-white/20"></div>
                   </div>
-                  <div className="text-purple-400">const</div> <span className="text-blue-300">config</span> = <span className="text-white">{'{'}</span>
+                  <div className="text-blue-400">const</div> <span className="text-blue-300">config</span> = <span className="text-white">{'{'}</span>
                   <div>&nbsp;&nbsp;<span className="text-blue-300">seuil</span>: <span className="text-orange-400">-40</span>,</div>
                   <div>&nbsp;&nbsp;<span className="text-blue-300">dureeMinimum</span>: <span className="text-orange-400">500</span>,</div>
                   <div>&nbsp;&nbsp;<span className="text-blue-300">padding</span>: <span className="text-orange-400">100</span>,</div>
@@ -648,7 +694,7 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="py-32 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-900/10 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/10 pointer-events-none"></div>
           <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">Prêt à transformer votre workflow ?</h2>
             <p className="text-lg text-neutral-400 mb-10 max-w-2xl mx-auto">
