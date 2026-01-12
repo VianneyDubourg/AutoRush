@@ -36,8 +36,9 @@ export default function AutoCutPage() {
   const [hasVideo, setHasVideo] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const [videoDuration, setVideoDuration] = useState(154) // 2:34 en secondes
+  const [videoDuration, setVideoDuration] = useState(0)
   const [videoName, setVideoName] = useState<string | null>(null)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [detectedSilences, setDetectedSilences] = useState<Silence[]>([])
   const [processingProgress, setProcessingProgress] = useState(0)
@@ -49,15 +50,70 @@ export default function AutoCutPage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('video/')) {
+      // Créer une URL pour la vidéo
+      const url = URL.createObjectURL(file)
+      setVideoUrl(url)
       setVideoName(file.name)
       setHasVideo(true)
       setDetectedSilences([])
       setCurrentTime(0)
       setIsProcessing(false)
     }
+  }
+
+  // Gérer la lecture/pause de la vidéo
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause()
+      } else {
+        videoRef.current.play()
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  // Mettre à jour le temps actuel
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime)
+    }
+  }
+
+  // Mettre à jour la durée de la vidéo
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setVideoDuration(videoRef.current.duration)
+    }
+  }
+
+  // Gérer le changement de position depuis le slider
+  const handleSeek = (value: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = value
+      setCurrentTime(value)
+    }
+  }
+
+  // Nettoyer l'URL de la vidéo lors du démontage
+  const handleRemoveVideo = () => {
+    if (videoUrl) {
+      URL.revokeObjectURL(videoUrl)
+    }
+    if (videoRef.current) {
+      videoRef.current.pause()
+    }
+    setHasVideo(false)
+    setVideoName(null)
+    setVideoUrl(null)
+    setDetectedSilences([])
+    setCurrentTime(0)
+    setIsPlaying(false)
+    setIsProcessing(false)
   }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -133,6 +189,15 @@ export default function AutoCutPage() {
 
   const waveform = generateWaveform()
 
+  // Nettoyer l'URL de la vidéo lors du démontage
+  useEffect(() => {
+    return () => {
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl)
+      }
+    }
+  }, [videoUrl])
+
   return (
     <div className="space-y-6">
       <div>
@@ -161,13 +226,7 @@ export default function AutoCutPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      setHasVideo(false)
-                      setVideoName(null)
-                      setDetectedSilences([])
-                      setCurrentTime(0)
-                      setIsProcessing(false)
-                    }}
+                    onClick={handleRemoveVideo}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -188,20 +247,26 @@ export default function AutoCutPage() {
               >
                 {hasVideo ? (
                   <div className="w-full h-full relative bg-background rounded overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center space-y-4">
-                        <FileVideo className="h-16 w-16 mx-auto text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{videoName}</p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {formatTime(videoDuration)} • {videoDuration > 0 ? Math.round((videoDuration * 0.05)) : 0} MB
-                          </p>
-                        </div>
-                        <div className="flex gap-2 justify-center">
+                    {videoUrl && (
+                      <>
+                        <video
+                          ref={videoRef}
+                          src={videoUrl}
+                          className="w-full h-full object-contain"
+                          onTimeUpdate={handleTimeUpdate}
+                          onLoadedMetadata={handleLoadedMetadata}
+                          onPlay={() => setIsPlaying(true)}
+                          onPause={() => setIsPlaying(false)}
+                          onEnded={() => setIsPlaying(false)}
+                        />
+                        
+                        {/* Contrôles de lecture */}
+                        <div className="absolute top-4 left-4">
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
-                            onClick={() => setIsPlaying(!isPlaying)}
+                            onClick={handlePlayPause}
+                            className="bg-black/70 hover:bg-black/90 text-white"
                           >
                             {isPlaying ? (
                               <Pause className="h-4 w-4 mr-2" />
@@ -211,25 +276,25 @@ export default function AutoCutPage() {
                             {isPlaying ? "Pause" : "Lecture"}
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                    
-                    {/* Timeline avec waveform */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-4 space-y-2">
-                      <div className="flex items-center justify-between text-white text-xs mb-2">
-                        <span>{formatTime(currentTime)}</span>
-                        <span>{formatTime(videoDuration)}</span>
-                      </div>
-                      <div className="relative">
-                        <Slider
-                          value={[currentTime]}
-                          max={videoDuration}
-                          step={0.1}
-                          className="w-full"
-                          onValueChange={([value]) => setCurrentTime(value)}
-                        />
-                      </div>
-                    </div>
+                        
+                        {/* Timeline avec waveform */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 space-y-2">
+                          <div className="flex items-center justify-between text-white text-xs mb-2">
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(videoDuration)}</span>
+                          </div>
+                          <div className="relative">
+                            <Slider
+                              value={[currentTime]}
+                              max={videoDuration || 100}
+                              step={0.1}
+                              className="w-full"
+                              onValueChange={([value]) => handleSeek(value)}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center space-y-4 p-8">
