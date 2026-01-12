@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Loader2, Zap } from "lucide-react"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -144,6 +145,8 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+
+          <OAuthButtons mode="login" />
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center text-muted-foreground">

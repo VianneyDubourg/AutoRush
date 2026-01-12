@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Loader2, Zap } from "lucide-react"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
 
 const registerSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -190,6 +191,8 @@ export default function RegisterPage() {
               </Button>
             </form>
           </Form>
+
+          <OAuthButtons mode="register" />
         </CardContent>
         <CardFooter>
           <div className="text-sm text-center text-muted-foreground w-full">
