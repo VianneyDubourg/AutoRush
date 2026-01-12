@@ -334,7 +334,7 @@ export default function Home() {
                           </button>
                         </div>
                         <button className="p-1.5 rounded-md bg-white text-black hover:bg-neutral-200 hover:scale-105 transition-all active:scale-95">
-                          <i data-lucide="plus" className="w-4 h-4"></i>
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -355,7 +355,7 @@ export default function Home() {
                         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group cursor-default">
                           <div className="flex justify-between items-start mb-4">
                             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
-                              <i data-lucide="clock" className="w-4 h-4"></i>
+                              <Clock className="w-4 h-4" />
                             </div>
                             <span className="text-green-400 text-xs flex items-center gap-1">Ce mois-ci</span>
                           </div>
@@ -570,7 +570,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="group p-8 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-300">
-                  <i data-lucide="scissors" className="w-6 h-6 text-blue-400"></i>
+                  <Scissors className="w-6 h-6 text-blue-400" />
                 </div>
                 <h3 className="text-xl font-medium text-white mb-3">AutoCut</h3>
                 <p className="text-neutral-400 leading-relaxed">
@@ -580,7 +580,7 @@ export default function Home() {
 
               <div className="group p-8 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-300">
-                  <i data-lucide="frame" className="w-6 h-6 text-blue-400"></i>
+                  <Frame className="w-6 h-6 text-blue-400" />
                 </div>
                 <h3 className="text-xl font-medium text-white mb-3">AutoFrame</h3>
                 <p className="text-neutral-400 leading-relaxed">
@@ -590,7 +590,7 @@ export default function Home() {
 
               <div className="group p-8 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300">
                 <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all duration-300">
-                  <i data-lucide="zap" className="w-6 h-6 text-green-400"></i>
+                  <Zap className="w-6 h-6 text-green-400" />
                 </div>
                 <h3 className="text-xl font-medium text-white mb-3">Traitement rapide</h3>
                 <p className="text-neutral-400 leading-relaxed">
