@@ -130,7 +130,12 @@ export default function AutoCutPage() {
       downloadBlob(processedBlob, processedFileName)
     } catch (error) {
       console.error('Erreur lors du traitement:', error)
-      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'string'
+        ? error
+        : JSON.stringify(error)
+      alert(`Erreur lors du traitement: ${errorMessage}`)
     } finally {
       setIsDownloading(false)
       setDownloadProgress(0)
