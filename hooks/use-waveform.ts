@@ -60,7 +60,12 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
     const timeoutId = setTimeout(() => {
       if (!waveformRef.current) return
       
-      // Utiliser WebAudio backend qui fonctionne mieux avec les vidéos
+      // Créer un élément audio pour extraire l'audio de la vidéo
+      const audio = document.createElement('audio')
+      audio.src = videoUrl
+      audio.crossOrigin = 'anonymous'
+      
+      // Utiliser MediaElement backend avec l'élément audio
       const wavesurfer = WaveSurfer.create({
         container: waveformRef.current,
         waveColor: 'hsl(var(--primary))',
@@ -71,14 +76,12 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
         barGap: 1,
         height: 120,
         normalize: true,
-        backend: 'WebAudio',
+        backend: 'MediaElement',
+        media: audio,
         interact: false,
       })
       
       wavesurferRef.current = wavesurfer
-      
-      // Charger l'audio de la vidéo
-      wavesurfer.load(videoUrl)
       
       wavesurfer.on('ready', () => {
         // Mettre à jour les régions une fois que la waveform est prête
