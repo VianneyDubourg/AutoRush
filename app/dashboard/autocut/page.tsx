@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils"
 import { usePlan } from "@/hooks/use-plan"
 import { FFmpeg } from "@ffmpeg/ffmpeg"
 import { fetchFile, toBlobURL } from "@ffmpeg/util"
+import WaveSurfer from "wavesurfer.js"
 
 interface Silence {
   id: number
@@ -59,6 +60,8 @@ export default function AutoCutPage() {
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const ffmpegRef = useRef<FFmpeg | null>(null)
+  const waveformRef = useRef<HTMLDivElement>(null)
+  const wavesurferRef = useRef<WaveSurfer | null>(null)
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('video/')) {
@@ -71,8 +74,126 @@ export default function AutoCutPage() {
       setDetectedSilences([])
       setCurrentTime(0)
       setIsProcessing(false)
+      
+      // Initialiser la waveform avec wavesurfer
+      initWaveform(url)
     }
   }
+  
+  // Initialiser la waveform avec wavesurfer
+  const initWaveform = (videoUrl: string) => {
+    // Détruire l'instance précédente si elle existe
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy()
+      wavesurferRef.current = null
+    }
+    
+    if (!waveformRef.current || !videoRef.current) return
+    
+    // Attendre que la vidéo soit chargée
+    const video = videoRef.current
+    
+    const initWhenReady = () => {
+      if (video.readyState < 2) {
+        video.addEventListener('loadedmetadata', initWhenReady, { once: true })
+        return
+      }
+      
+      // Créer un élément audio temporaire pour extraire l'audio de la vidéo
+      const audio = document.createElement('audio')
+      audio.src = videoUrl
+      audio.crossOrigin = 'anonymous'
+      
+      // Créer une nouvelle instance de WaveSurfer avec MediaElement
+      const wavesurfer = WaveSurfer.create({
+        container: waveformRef.current!,
+        waveColor: 'hsl(var(--primary))',
+        progressColor: 'hsl(var(--primary) / 0.5)',
+        cursorColor: 'hsl(var(--primary))',
+        barWidth: 2,
+        barRadius: 2,
+        barGap: 1,
+        height: 120,
+        normalize: true,
+        backend: 'MediaElement',
+        media: audio,
+        interact: false, // Désactiver l'interaction pour éviter les conflits avec la vidéo
+      })
+      
+      wavesurferRef.current = wavesurfer
+      
+      // Synchroniser avec la vidéo
+      wavesurfer.on('ready', () => {
+        if (video) {
+          setVideoDuration(video.duration || wavesurfer.getDuration())
+        }
+        updateSilenceRegions()
+      })
+    }
+    
+    initWhenReady()
+  }
+  
+  // Mettre à jour les régions de silence sur la waveform
+  const updateSilenceRegions = () => {
+    if (!wavesurferRef.current) return
+    
+    // Supprimer les anciennes régions
+    wavesurferRef.current.clearRegions()
+    
+    // Ajouter les nouvelles régions de silence
+    detectedSilences.forEach((silence) => {
+      wavesurferRef.current?.addRegion({
+        start: silence.start,
+        end: silence.end,
+        color: 'rgba(239, 68, 68, 0.3)', // Rouge pour les silences
+        drag: false,
+        resize: false,
+      })
+    })
+  }
+  
+  // Synchroniser la waveform avec la vidéo
+  useEffect(() => {
+    if (!wavesurferRef.current || !videoRef.current || !hasVideo) return
+    
+    const video = videoRef.current
+    const wavesurfer = wavesurferRef.current
+    
+    const handleTimeUpdate = () => {
+      if (video.duration > 0) {
+        const progress = video.currentTime / video.duration
+        if (Math.abs(wavesurfer.getCurrentTime() / wavesurfer.getDuration() - progress) > 0.01) {
+          wavesurfer.seekTo(progress)
+        }
+      }
+    }
+    
+    const handlePlay = () => {
+      wavesurfer.play()
+    }
+    
+    const handlePause = () => {
+      wavesurfer.pause()
+    }
+    
+    video.addEventListener('timeupdate', handleTimeUpdate)
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('pause', handlePause)
+    
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate)
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [hasVideo])
+  
+  // Mettre à jour les régions quand les silences changent
+  useEffect(() => {
+    if (detectedSilences.length > 0) {
+      updateSilenceRegions()
+    }
+  }, [detectedSilences])
 
   // Gérer la lecture/pause de la vidéo
   const handlePlayPause = () => {
@@ -115,6 +236,10 @@ export default function AutoCutPage() {
     }
     if (videoRef.current) {
       videoRef.current.pause()
+    }
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy()
+      wavesurferRef.current = null
     }
     setHasVideo(false)
     setVideoName(null)
@@ -368,37 +493,15 @@ export default function AutoCutPage() {
   const totalSilenceTime = detectedSilences.reduce((acc, s) => acc + s.duration, 0)
   const finalDuration = videoDuration - totalSilenceTime
 
-  // Génération de la waveform (simulée)
-  const generateWaveform = () => {
-    // Augmenter le nombre de barres pour une meilleure résolution
-    const barCount = Math.min(300, Math.max(150, Math.floor(videoDuration * 2)))
-    return Array.from({ length: barCount }, (_, i) => {
-      const position = (i / barCount) * videoDuration
-      // Simuler des zones de silence avec des valeurs basses
-      const isSilence = detectedSilences.some(s => 
-        position >= s.start && position <= s.end
-      )
-      
-      if (isSilence) {
-        // Zones de silence : très bas niveau (5-15%)
-        return Math.random() * 10 + 5
-      } else {
-        // Zones avec audio : variation plus réaliste (20-95%)
-        // Simuler des pics et des creux naturels
-        const base = Math.random() * 50 + 30
-        const variation = Math.sin(i * 0.1) * 20
-        return Math.max(20, Math.min(95, base + variation))
-      }
-    })
-  }
-
-  const waveform = generateWaveform()
-
-  // Nettoyer l'URL de la vidéo lors du démontage
+  // Nettoyer l'URL de la vidéo et wavesurfer lors du démontage
   useEffect(() => {
     return () => {
       if (videoUrl) {
         URL.revokeObjectURL(videoUrl)
+      }
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy()
+        wavesurferRef.current = null
       }
     }
   }, [videoUrl])
@@ -547,55 +650,13 @@ export default function AutoCutPage() {
                         <span>Audio</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded bg-destructive"></div>
+                        <div className="w-3 h-3 rounded bg-destructive/30"></div>
                         <span>Silence</span>
                       </div>
                     </div>
                   </div>
-                  <div className="relative h-32 bg-gradient-to-b from-muted to-muted/50 rounded-lg border-2 border-border overflow-hidden">
-                    {/* Ligne de référence centrale */}
-                    <div className="absolute inset-0 flex items-center pointer-events-none">
-                      <div className="w-full h-px bg-border/50"></div>
-                    </div>
-                    {/* Waveform */}
-                    <div className="w-full h-full flex items-end justify-center gap-0.5 px-2 py-2 relative">
-                      {waveform.map((height, i) => {
-                        const position = (i / waveform.length) * videoDuration
-                        const isInSilence = detectedSilences.some(s => 
-                          position >= s.start && position <= s.end
-                        )
-                        const barHeight = Math.max(height, 5) // Minimum 5% pour visibilité
-                        
-                        return (
-                          <div
-                            key={i}
-                            className={cn(
-                              "flex-1 min-w-[2px] rounded-t transition-all duration-75",
-                              isInSilence 
-                                ? "bg-destructive shadow-sm shadow-destructive/30" 
-                                : "bg-primary shadow-sm shadow-primary/20"
-                            )}
-                            style={{ 
-                              height: `${barHeight}%`,
-                              minHeight: '2px'
-                            }}
-                            title={`${formatTime(position)} - ${isInSilence ? 'Silence' : 'Audio'}`}
-                          />
-                        )
-                      })}
-                      {/* Indicateur de position actuelle */}
-                      {videoDuration > 0 && (
-                        <div 
-                          className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 pointer-events-none"
-                          style={{ 
-                            left: `${(currentTime / videoDuration) * 100}%`,
-                            transform: 'translateX(-50%)'
-                          }}
-                        >
-                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary border-2 border-background"></div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="relative rounded-lg border-2 border-border overflow-hidden bg-muted/50">
+                    <div ref={waveformRef} className="w-full" />
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground font-mono">{formatTime(0)}</span>
