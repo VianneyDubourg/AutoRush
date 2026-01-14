@@ -2,31 +2,20 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
-  Upload, 
-  Play, 
-  Pause, 
-  Download, 
-  Settings, 
-  Scissors,
-  Volume2,
-  Clock,
-  FileVideo,
-  X,
-  CheckCircle2,
-  Loader2
+  Upload, Play, Pause, Download, Settings, Scissors,
+  Volume2, Clock, X, CheckCircle2, Loader2
 } from "lucide-react"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlan } from "@/hooks/use-plan"
-import { FFmpeg } from "@ffmpeg/ffmpeg"
-import { fetchFile, toBlobURL } from "@ffmpeg/util"
-import WaveSurfer from "wavesurfer.js"
+import { useVideoPlayer } from "@/hooks/use-video-player"
+import { useWaveform } from "@/hooks/use-waveform"
+import { useFFmpegProcessing } from "@/hooks/use-ffmpeg-processing"
+import { formatTime, downloadBlob, getProcessedFileName, uploadToSupabase } from "@/lib/video-utils"
 
 interface Silence {
   id: number
@@ -36,410 +25,59 @@ interface Silence {
 }
 
 export default function AutoCutPage() {
-  const { config, isFree } = usePlan()
-  const [isProcessing, setIsProcessing] = useState(false)
+  const { isFree } = usePlan()
   const [hasVideo, setHasVideo] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [videoDuration, setVideoDuration] = useState(0)
   const [videoName, setVideoName] = useState<string | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [detectedSilences, setDetectedSilences] = useState<Silence[]>([])
+  const [isProcessing, setIsProcessing] = useState(false)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [downloadProgress, setDownloadProgress] = useState(0)
   
-  // Réglages - fixes pour plan gratuit, ajustables pour Creator/Pro
   const [threshold, setThreshold] = useState(-40)
   const [minDuration, setMinDuration] = useState(500)
   const [padding, setPadding] = useState(isFree ? 0 : 100)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const ffmpegRef = useRef<FFmpeg | null>(null)
-  const waveformRef = useRef<HTMLDivElement>(null)
-  const wavesurferRef = useRef<WaveSurfer | null>(null)
-
-  const handleFileSelect = (file: File) => {
-    if (file && file.type.startsWith('video/')) {
-      // Créer une URL pour la vidéo
-      const url = URL.createObjectURL(file)
-      setVideoUrl(url)
-      setVideoFile(file)
-      setVideoName(file.name)
-      setHasVideo(true)
-      setDetectedSilences([])
-      setCurrentTime(0)
-      setIsProcessing(false)
-      
-      // Initialiser la waveform avec wavesurfer
-      initWaveform(url)
-    }
-  }
   
-  // Initialiser la waveform avec wavesurfer
-  const initWaveform = (videoUrl: string) => {
-    // Détruire l'instance précédente si elle existe
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy()
-      wavesurferRef.current = null
-    }
-    
-    if (!waveformRef.current || !videoRef.current) return
-    
-    // Attendre que la vidéo soit chargée
-    const video = videoRef.current
-    
-    const initWhenReady = () => {
-      if (video.readyState < 2) {
-        video.addEventListener('loadedmetadata', initWhenReady, { once: true })
-        return
-      }
-      
-      // Créer un élément audio temporaire pour extraire l'audio de la vidéo
-      const audio = document.createElement('audio')
-      audio.src = videoUrl
-      audio.crossOrigin = 'anonymous'
-      
-      // Créer une nouvelle instance de WaveSurfer avec MediaElement
-      const wavesurfer = WaveSurfer.create({
-        container: waveformRef.current!,
-        waveColor: 'hsl(var(--primary))',
-        progressColor: 'hsl(var(--primary) / 0.5)',
-        cursorColor: 'hsl(var(--primary))',
-        barWidth: 2,
-        barRadius: 2,
-        barGap: 1,
-        height: 120,
-        normalize: true,
-        backend: 'MediaElement',
-        media: audio,
-        interact: false, // Désactiver l'interaction pour éviter les conflits avec la vidéo
-      })
-      
-      wavesurferRef.current = wavesurfer
-      
-      // Synchroniser avec la vidéo
-      wavesurfer.on('ready', () => {
-        if (video) {
-          setVideoDuration(video.duration || wavesurfer.getDuration())
-        }
-        updateSilenceRegions()
-      })
-    }
-    
-    initWhenReady()
-  }
-  
-  // Mettre à jour les régions de silence sur la waveform
-  const updateSilenceRegions = () => {
-    if (!wavesurferRef.current) return
-    
-    // Supprimer les anciennes régions
-    wavesurferRef.current.clearRegions()
-    
-    // Ajouter les nouvelles régions de silence
-    detectedSilences.forEach((silence) => {
-      wavesurferRef.current?.addRegion({
-        start: silence.start,
-        end: silence.end,
-        color: 'rgba(239, 68, 68, 0.3)', // Rouge pour les silences
-        drag: false,
-        resize: false,
-      })
-    })
-  }
-  
-  // Synchroniser la waveform avec la vidéo
-  useEffect(() => {
-    if (!wavesurferRef.current || !videoRef.current || !hasVideo) return
-    
-    const video = videoRef.current
-    const wavesurfer = wavesurferRef.current
-    
-    const handleTimeUpdate = () => {
-      if (video.duration > 0) {
-        const progress = video.currentTime / video.duration
-        if (Math.abs(wavesurfer.getCurrentTime() / wavesurfer.getDuration() - progress) > 0.01) {
-          wavesurfer.seekTo(progress)
-        }
-      }
-    }
-    
-    const handlePlay = () => {
-      wavesurfer.play()
-    }
-    
-    const handlePause = () => {
-      wavesurfer.pause()
-    }
-    
-    video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('play', handlePlay)
-    video.addEventListener('pause', handlePause)
-    
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('play', handlePlay)
-      video.removeEventListener('pause', handlePause)
-    }
-  }, [hasVideo])
-  
-  // Mettre à jour les régions quand les silences changent
-  useEffect(() => {
-    if (detectedSilences.length > 0) {
-      updateSilenceRegions()
-    }
-  }, [detectedSilences])
+  const videoPlayer = useVideoPlayer()
+  const { waveformRef } = useWaveform(videoUrl, detectedSilences, videoPlayer.videoRef)
+  const { processVideo, downloadProgress, setDownloadProgress } = useFFmpegProcessing()
 
-  // Gérer la lecture/pause de la vidéo
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
+  const handleFileSelect = useCallback((file: File) => {
+    if (!file?.type.startsWith('video/')) return
+    
+    const url = URL.createObjectURL(file)
+    setVideoUrl(url)
+    setVideoFile(file)
+    setVideoName(file.name)
+    setHasVideo(true)
+    setDetectedSilences([])
+    videoPlayer.setCurrentTime(0)
+    setIsProcessing(false)
+  }, [videoPlayer])
 
-  // Mettre à jour le temps actuel
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime)
-    }
-  }
-
-  // Mettre à jour la durée de la vidéo
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setVideoDuration(videoRef.current.duration)
-    }
-  }
-
-  // Gérer le changement de position depuis le slider
-  const handleSeek = (value: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = value
-      setCurrentTime(value)
-    }
-  }
-
-  // Nettoyer l'URL de la vidéo lors du démontage
-  const handleRemoveVideo = () => {
-    if (videoUrl) {
-      URL.revokeObjectURL(videoUrl)
-    }
-    if (videoRef.current) {
-      videoRef.current.pause()
-    }
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy()
-      wavesurferRef.current = null
-    }
+  const handleRemoveVideo = useCallback(() => {
+    if (videoUrl) URL.revokeObjectURL(videoUrl)
+    videoPlayer.videoRef.current?.pause()
     setHasVideo(false)
     setVideoName(null)
     setVideoUrl(null)
     setVideoFile(null)
     setDetectedSilences([])
-    setCurrentTime(0)
-    setIsPlaying(false)
+    videoPlayer.setCurrentTime(0)
+    videoPlayer.setIsPlaying(false)
     setIsProcessing(false)
-  }
-
-  // Initialiser FFmpeg
-  const initFFmpeg = async () => {
-    if (ffmpegRef.current && (ffmpegRef.current as any).loaded) {
-      return ffmpegRef.current
-    }
-
-    const ffmpeg = new FFmpeg()
-    ffmpegRef.current = ffmpeg
-
-    // Ajouter un listener pour la progression
-    ffmpeg.on('log', ({ message }) => {
-      console.log('FFmpeg:', message)
-    })
-
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-    
-    setDownloadProgress(10)
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    })
-    setDownloadProgress(30)
-
-    return ffmpeg
-  }
-
-  // Traiter la vidéo pour supprimer les silences
-  const processVideoWithFFmpeg = async (file: File, silences: Silence[]): Promise<Blob> => {
-    const ffmpeg = await initFFmpeg()
-    
-    // Trier les silences par ordre chronologique
-    const sortedSilences = [...silences].sort((a, b) => a.start - b.start)
-    
-    setDownloadProgress(40)
-    // Écrire le fichier vidéo dans le système de fichiers virtuel
-    await ffmpeg.writeFile('input.mp4', await fetchFile(file))
-    setDownloadProgress(50)
-    
-    // Créer les segments à garder (tout sauf les silences)
-    const segments: Array<{ start: number; end: number }> = []
-    let currentTime = 0
-    
-    for (const silence of sortedSilences) {
-      // Si il y a un segment avant le silence, l'ajouter
-      if (silence.start > currentTime) {
-        segments.push({ start: currentTime, end: silence.start })
-      }
-      currentTime = Math.max(currentTime, silence.end)
-    }
-    
-    // Ajouter le dernier segment s'il reste de la vidéo après le dernier silence
-    if (currentTime < videoDuration) {
-      segments.push({ start: currentTime, end: videoDuration })
-    }
-    
-    // Si aucun segment (toute la vidéo est silence), retourner une vidéo vide
-    if (segments.length === 0) {
-      throw new Error('Toute la vidéo est composée de silences')
-    }
-    
-    setDownloadProgress(60)
-    
-    // Si un seul segment, utiliser trim directement
-    if (segments.length === 1) {
-      const seg = segments[0]
-      await ffmpeg.exec([
-        '-i', 'input.mp4',
-        '-ss', seg.start.toString(),
-        '-t', (seg.end - seg.start).toString(),
-        '-c', 'copy',
-        'output.mp4'
-      ])
-    } else {
-      // Plusieurs segments : créer un filtre complexe pour trim et concat
-      const filterParts: string[] = []
-      const concatInputs: string[] = []
-      
-      segments.forEach((seg, i) => {
-        const duration = seg.end - seg.start
-        filterParts.push(`[0:v]trim=start=${seg.start}:duration=${duration},setpts=PTS-STARTPTS[v${i}]`)
-        filterParts.push(`[0:a]atrim=start=${seg.start}:duration=${duration},asetpts=PTS-STARTPTS[a${i}]`)
-        concatInputs.push(`[v${i}][a${i}]`)
-      })
-      
-      // Construire le filtre concat correctement
-      const filterComplex = `${filterParts.join(';')};${concatInputs.join('')}concat=n=${segments.length}:v=1:a=1[outv][outa]`
-      
-      // Exécuter FFmpeg
-      await ffmpeg.exec([
-        '-i', 'input.mp4',
-        '-filter_complex', filterComplex,
-        '-map', '[outv]',
-        '-map', '[outa]',
-        '-c:v', 'libx264',
-        '-c:a', 'aac',
-        '-preset', 'fast',
-        '-crf', '23',
-        '-shortest',
-        'output.mp4'
-      ])
-    }
-    
-    setDownloadProgress(90)
-    
-    // Lire le fichier de sortie
-    const data = await ffmpeg.readFile('output.mp4')
-    
-    // Nettoyer les fichiers temporaires
-    await ffmpeg.deleteFile('input.mp4')
-    await ffmpeg.deleteFile('output.mp4')
-    
-    setDownloadProgress(100)
-    return new Blob([data], { type: 'video/mp4' })
-  }
-
-  // Télécharger la vidéo traitée
-  const handleDownloadProcessedVideo = async () => {
-    if (!videoFile || detectedSilences.length === 0) {
-      return
-    }
-
-    setIsDownloading(true)
-    setDownloadProgress(0)
-    
-    try {
-      // Traiter la vidéo avec FFmpeg pour supprimer les silences
-      const processedBlob = await processVideoWithFFmpeg(videoFile, detectedSilences)
-      
-      // Créer un nom de fichier pour la vidéo traitée
-      const originalName = videoName || 'video.mp4'
-      const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '')
-      const extension = originalName.split('.').pop()
-      const processedFileName = `${nameWithoutExt}_processed.${extension}`
-      
-      // Convertir le Blob en File pour l'upload
-      const processedFile = new File([processedBlob], processedFileName, { type: 'video/mp4' })
-      
-      // Uploader vers Supabase
-      try {
-        const formData = new FormData()
-        formData.append('file', processedFile)
-        
-        const uploadResponse = await fetch('/api/videos/upload', {
-          method: 'POST',
-          body: formData,
-        })
-        
-        if (uploadResponse.ok) {
-          const result = await uploadResponse.json()
-          console.log('Vidéo traitée uploadée avec succès:', result)
-        } else {
-          const error = await uploadResponse.json()
-          console.warn('Erreur lors de l\'upload vers Supabase:', error)
-          // On continue quand même le téléchargement local
-        }
-      } catch (uploadError) {
-        console.warn('Erreur lors de l\'upload vers Supabase:', uploadError)
-        // On continue quand même le téléchargement local
-      }
-      
-      // Créer un lien de téléchargement local
-      const url = URL.createObjectURL(processedBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = processedFileName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Nettoyer l'URL après un délai
-      setTimeout(() => {
-        URL.revokeObjectURL(url)
-      }, 100)
-      
-    } catch (error) {
-      console.error('Erreur lors du traitement:', error)
-      alert(`Erreur lors du traitement de la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-    } finally {
-      setIsDownloading(false)
-      setDownloadProgress(0)
-    }
-  }
+  }, [videoUrl, videoPlayer])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFileSelect(file)
-  }, [])
+    handleFileSelect(e.dataTransfer.files[0])
+  }, [handleFileSelect])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -451,28 +89,15 @@ export default function AutoCutPage() {
     setIsDragging(false)
   }, [])
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFileSelect(file)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
   const handleDetectSilences = () => {
     setIsProcessing(true)
     setProcessingProgress(0)
     
-    // Simulation du traitement
     const interval = setInterval(() => {
       setProcessingProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval)
           setIsProcessing(false)
-          // Simuler des silences détectés
           setDetectedSilences([
             { id: 1, start: 5.2, end: 7.8, duration: 2.6 },
             { id: 2, start: 12.5, end: 14.1, duration: 1.6 },
@@ -490,19 +115,40 @@ export default function AutoCutPage() {
     }, 200)
   }
 
-  const totalSilenceTime = detectedSilences.reduce((acc, s) => acc + s.duration, 0)
-  const finalDuration = videoDuration - totalSilenceTime
+  const handleDownloadProcessedVideo = async () => {
+    if (!videoFile || detectedSilences.length === 0) return
 
-  // Nettoyer l'URL de la vidéo et wavesurfer lors du démontage
+    setIsDownloading(true)
+    setDownloadProgress(0)
+    
+    try {
+      const processedBlob = await processVideo(videoFile, detectedSilences, videoPlayer.videoDuration)
+      const processedFileName = getProcessedFileName(videoName || 'video.mp4')
+      const processedFile = new File([processedBlob], processedFileName, { type: 'video/mp4' })
+      
+      try {
+        await uploadToSupabase(processedFile)
+        console.log('Vidéo traitée uploadée avec succès')
+      } catch (error) {
+        console.warn('Erreur lors de l\'upload:', error)
+      }
+      
+      downloadBlob(processedBlob, processedFileName)
+    } catch (error) {
+      console.error('Erreur lors du traitement:', error)
+      alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    } finally {
+      setIsDownloading(false)
+      setDownloadProgress(0)
+    }
+  }
+
+  const totalSilenceTime = detectedSilences.reduce((acc, s) => acc + s.duration, 0)
+  const finalDuration = videoPlayer.videoDuration - totalSilenceTime
+
   useEffect(() => {
     return () => {
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl)
-      }
-      if (wavesurferRef.current) {
-        wavesurferRef.current.destroy()
-        wavesurferRef.current = null
-      }
+      if (videoUrl) URL.revokeObjectURL(videoUrl)
     }
   }, [videoUrl])
 
@@ -519,7 +165,6 @@ export default function AutoCutPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Video Preview Area */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
@@ -531,11 +176,7 @@ export default function AutoCutPage() {
                   </CardDescription>
                 </div>
                 {hasVideo && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRemoveVideo}
-                  >
+                  <Button variant="ghost" size="icon" onClick={handleRemoveVideo}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
@@ -558,48 +199,41 @@ export default function AutoCutPage() {
                     {videoUrl && (
                       <>
                         <video
-                          ref={videoRef}
+                          ref={videoPlayer.videoRef}
                           src={videoUrl}
                           className="w-full h-full object-contain"
-                          onTimeUpdate={handleTimeUpdate}
-                          onLoadedMetadata={handleLoadedMetadata}
-                          onPlay={() => setIsPlaying(true)}
-                          onPause={() => setIsPlaying(false)}
-                          onEnded={() => setIsPlaying(false)}
+                          onTimeUpdate={videoPlayer.handleTimeUpdate}
+                          onLoadedMetadata={videoPlayer.handleLoadedMetadata}
+                          onPlay={() => videoPlayer.setIsPlaying(true)}
+                          onPause={() => videoPlayer.setIsPlaying(false)}
+                          onEnded={() => videoPlayer.setIsPlaying(false)}
                         />
-                        
-                        {/* Contrôles de lecture */}
                         <div className="absolute top-4 left-4">
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={handlePlayPause}
+                            onClick={videoPlayer.handlePlayPause}
                             className="bg-black/70 hover:bg-black/90 text-white"
                           >
-                            {isPlaying ? (
-                              <Pause className="h-4 w-4 mr-2" />
+                            {videoPlayer.isPlaying ? (
+                              <><Pause className="h-4 w-4 mr-2" />Pause</>
                             ) : (
-                              <Play className="h-4 w-4 mr-2" />
+                              <><Play className="h-4 w-4 mr-2" />Lecture</>
                             )}
-                            {isPlaying ? "Pause" : "Lecture"}
                           </Button>
                         </div>
-                        
-                        {/* Timeline avec waveform */}
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 space-y-2">
                           <div className="flex items-center justify-between text-white text-xs mb-2">
-                            <span>{formatTime(currentTime)}</span>
-                            <span>{formatTime(videoDuration)}</span>
+                            <span>{formatTime(videoPlayer.currentTime)}</span>
+                            <span>{formatTime(videoPlayer.videoDuration)}</span>
                           </div>
-                          <div className="relative">
-                            <Slider
-                              value={[currentTime]}
-                              max={videoDuration || 100}
-                              step={0.1}
-                              className="w-full"
-                              onValueChange={([value]) => handleSeek(value)}
-                            />
-                          </div>
+                          <Slider
+                            value={[videoPlayer.currentTime]}
+                            max={videoPlayer.videoDuration || 100}
+                            step={0.1}
+                            className="w-full"
+                            onValueChange={([value]) => videoPlayer.handleSeek(value)}
+                          />
                         </div>
                       </>
                     )}
@@ -630,13 +264,12 @@ export default function AutoCutPage() {
                       type="file"
                       accept="video/*"
                       className="hidden"
-                      onChange={handleFileInput}
+                      onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                     />
                   </div>
                 )}
               </div>
 
-              {/* Timeline Audio avec waveform */}
               {hasVideo && (
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -646,11 +279,11 @@ export default function AutoCutPage() {
                     </Label>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded bg-primary"></div>
+                        <div className="w-3 h-3 rounded bg-primary" />
                         <span>Audio</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded bg-destructive/30"></div>
+                        <div className="w-3 h-3 rounded bg-destructive/30" />
                         <span>Silence</span>
                       </div>
                     </div>
@@ -660,41 +293,31 @@ export default function AutoCutPage() {
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground font-mono">{formatTime(0)}</span>
-                    <span className="text-muted-foreground font-mono">{formatTime(videoDuration)}</span>
+                    <span className="text-muted-foreground font-mono">{formatTime(videoPlayer.videoDuration)}</span>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Liste des silences détectés */}
           {detectedSilences.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Silences détectés ({detectedSilences.length})</CardTitle>
-                <CardDescription>
-                  Liste de tous les silences qui seront supprimés
-                </CardDescription>
+                <CardDescription>Liste de tous les silences qui seront supprimés</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {detectedSilences.map((silence) => (
-                    <div
-                      key={silence.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
-                    >
+                    <div key={silence.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded bg-destructive/20 flex items-center justify-center">
                           <Volume2 className="h-5 w-5 text-destructive" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">
-                            Silence #{silence.id}
-                          </p>
+                          <p className="text-sm font-medium">Silence #{silence.id}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatTime(silence.start)} - {formatTime(silence.end)} 
-                            {" • "}
-                            {silence.duration.toFixed(1)}s
+                            {formatTime(silence.start)} - {formatTime(silence.end)} • {silence.duration.toFixed(1)}s
                           </p>
                         </div>
                       </div>
@@ -709,7 +332,6 @@ export default function AutoCutPage() {
           )}
         </div>
 
-        {/* Settings Panel */}
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -717,9 +339,7 @@ export default function AutoCutPage() {
                 <Settings className="h-5 w-5" />
                 Réglages
               </CardTitle>
-              <CardDescription>
-                Configurez la détection des silences
-              </CardDescription>
+              <CardDescription>Configurez la détection des silences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
@@ -795,21 +415,14 @@ export default function AutoCutPage() {
                 disabled={!hasVideo || isProcessing}
               >
                 {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Traitement...
-                  </>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Traitement...</>
                 ) : (
-                  <>
-                    <Scissors className="h-4 w-4 mr-2" />
-                    Détecter les silences
-                  </>
+                  <><Scissors className="h-4 w-4 mr-2" />Détecter les silences</>
                 )}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Résultats */}
           {(detectedSilences.length > 0 || isProcessing) && (
             <Card>
               <CardHeader>
@@ -833,7 +446,7 @@ export default function AutoCutPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Durée originale</span>
-                    <span className="font-medium">{formatTime(videoDuration)}</span>
+                    <span className="font-medium">{formatTime(videoPlayer.videoDuration)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="text-sm font-medium">Durée finale</span>
@@ -842,12 +455,9 @@ export default function AutoCutPage() {
                   <div className="pt-2">
                     <div className="flex justify-between text-xs text-muted-foreground mb-1">
                       <span>Réduction</span>
-                      <span>{((totalSilenceTime / videoDuration) * 100).toFixed(1)}%</span>
+                      <span>{((totalSilenceTime / videoPlayer.videoDuration) * 100).toFixed(1)}%</span>
                     </div>
-                    <Progress 
-                      value={(totalSilenceTime / videoDuration) * 100} 
-                      className="h-2"
-                    />
+                    <Progress value={(totalSilenceTime / videoPlayer.videoDuration) * 100} className="h-2" />
                   </div>
                 </div>
                 {isDownloading && (
@@ -865,15 +475,9 @@ export default function AutoCutPage() {
                   onClick={handleDownloadProcessedVideo}
                 >
                   {isDownloading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Traitement en cours...
-                    </>
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Traitement en cours...</>
                   ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Télécharger la vidéo traitée
-                    </>
+                    <><Download className="h-4 w-4 mr-2" />Télécharger la vidéo traitée</>
                   )}
                 </Button>
               </CardContent>
