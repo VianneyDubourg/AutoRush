@@ -1,15 +1,22 @@
 "use client"
 
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { Settings, Moon, Sun } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useTheme } from "next-themes"
+import { useState } from "react"
 
 export default function SettingsPage() {
   const { theme } = useTheme()
+  const [defaultThreshold, setDefaultThreshold] = useState(-40)
+  const [defaultDuration, setDefaultDuration] = useState(500)
+  const [defaultPadding, setDefaultPadding] = useState(100)
 
   return (
     <div className="space-y-6">
@@ -85,19 +92,64 @@ export default function SettingsPage() {
               Paramètres par défaut pour AutoCut
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="default-threshold">Seuil de silence par défaut (dB)</Label>
-              <Input id="default-threshold" type="number" defaultValue="-40" />
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="default-threshold">Seuil de silence par défaut</Label>
+                <span className="text-sm text-muted-foreground">{defaultThreshold} dB</span>
+              </div>
+              <Slider
+                id="default-threshold"
+                value={[defaultThreshold]}
+                onValueChange={([value]) => setDefaultThreshold(value)}
+                min={-60}
+                max={0}
+                step={1}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Plus le seuil est bas, plus les silences sont détectés. Recommandé: -40 dB
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="default-duration">Durée minimum par défaut (ms)</Label>
-              <Input id="default-duration" type="number" defaultValue="500" />
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="default-duration">Durée minimum par défaut</Label>
+                <span className="text-sm text-muted-foreground">{defaultDuration} ms</span>
+              </div>
+              <Slider
+                id="default-duration"
+                value={[defaultDuration]}
+                onValueChange={([value]) => setDefaultDuration(value)}
+                min={100}
+                max={5000}
+                step={100}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Durée minimum d'un silence pour être supprimé. Recommandé: 500 ms
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="default-padding">Padding par défaut (ms)</Label>
-              <Input id="default-padding" type="number" defaultValue="100" />
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="default-padding">Padding par défaut</Label>
+                <span className="text-sm text-muted-foreground">{defaultPadding} ms</span>
+              </div>
+              <Slider
+                id="default-padding"
+                value={[defaultPadding]}
+                onValueChange={([value]) => setDefaultPadding(value)}
+                min={0}
+                max={1000}
+                step={50}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Espace conservé avant et après chaque coupure. Recommandé: 100 ms
+              </p>
             </div>
+
             <Button>Enregistrer les préférences</Button>
           </CardContent>
         </Card>
