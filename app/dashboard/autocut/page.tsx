@@ -179,13 +179,25 @@ export default function AutoCutPage() {
 
   // Génération de la waveform (simulée)
   const generateWaveform = () => {
-    return Array.from({ length: 100 }, (_, i) => {
+    // Augmenter le nombre de barres pour une meilleure résolution
+    const barCount = Math.min(300, Math.max(150, Math.floor(videoDuration * 2)))
+    return Array.from({ length: barCount }, (_, i) => {
+      const position = (i / barCount) * videoDuration
       // Simuler des zones de silence avec des valeurs basses
-      const isSilence = detectedSilences.some(s => {
-        const position = (i / 100) * videoDuration
-        return position >= s.start && position <= s.end
-      })
-      return isSilence ? Math.random() * 15 + 5 : Math.random() * 80 + 20
+      const isSilence = detectedSilences.some(s => 
+        position >= s.start && position <= s.end
+      )
+      
+      if (isSilence) {
+        // Zones de silence : très bas niveau (5-15%)
+        return Math.random() * 10 + 5
+      } else {
+        // Zones avec audio : variation plus réaliste (20-95%)
+        // Simuler des pics et des creux naturels
+        const base = Math.random() * 50 + 30
+        const variation = Math.sin(i * 0.1) * 20
+        return Math.max(20, Math.min(95, base + variation))
+      }
     })
   }
 
@@ -332,42 +344,73 @@ export default function AutoCutPage() {
 
               {/* Timeline Audio avec waveform */}
               {hasVideo && (
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2">
+                    <Label className="flex items-center gap-2 text-sm font-medium">
                       <Volume2 className="h-4 w-4" />
-                      Timeline audio
+                      Waveform audio
                     </Label>
-                    <span className="text-xs text-muted-foreground">
-                      Zones rouges = silences détectés
-                    </span>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-primary"></div>
+                        <span>Audio</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-destructive"></div>
+                        <span>Silence</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="relative h-24 bg-muted rounded-lg border p-2">
-                    <div className="w-full h-full flex items-end gap-px relative">
+                  <div className="relative h-32 bg-gradient-to-b from-muted to-muted/50 rounded-lg border-2 border-border overflow-hidden">
+                    {/* Ligne de référence centrale */}
+                    <div className="absolute inset-0 flex items-center pointer-events-none">
+                      <div className="w-full h-px bg-border/50"></div>
+                    </div>
+                    {/* Waveform */}
+                    <div className="w-full h-full flex items-end justify-center gap-0.5 px-2 py-2 relative">
                       {waveform.map((height, i) => {
                         const position = (i / waveform.length) * videoDuration
                         const isInSilence = detectedSilences.some(s => 
                           position >= s.start && position <= s.end
                         )
                         const isCurrentPosition = Math.abs(position - currentTime) < 0.5
+                        const barHeight = Math.max(height, 5) // Minimum 5% pour visibilité
                         
                         return (
                           <div
                             key={i}
                             className={cn(
-                              "flex-1 rounded-sm transition-colors",
-                              isInSilence ? "bg-destructive/60" : "bg-primary/60",
-                              isCurrentPosition && "ring-2 ring-primary ring-offset-1"
+                              "flex-1 min-w-[2px] rounded-t transition-all duration-75",
+                              isInSilence 
+                                ? "bg-destructive shadow-sm shadow-destructive/30" 
+                                : "bg-primary shadow-sm shadow-primary/20",
+                              isCurrentPosition && "ring-2 ring-primary ring-offset-2 ring-offset-background z-10 scale-110"
                             )}
-                            style={{ height: `${height}%` }}
+                            style={{ 
+                              height: `${barHeight}%`,
+                              minHeight: '2px'
+                            }}
+                            title={`${formatTime(position)} - ${isInSilence ? 'Silence' : 'Audio'}`}
                           />
                         )
                       })}
+                      {/* Indicateur de position actuelle */}
+                      {videoDuration > 0 && (
+                        <div 
+                          className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 pointer-events-none"
+                          style={{ 
+                            left: `${(currentTime / videoDuration) * 100}%`,
+                            transform: 'translateX(-50%)'
+                          }}
+                        >
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary border-2 border-background"></div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{formatTime(0)}</span>
-                    <span>{formatTime(videoDuration)}</span>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground font-mono">{formatTime(0)}</span>
+                    <span className="text-muted-foreground font-mono">{formatTime(videoDuration)}</span>
                   </div>
                 </div>
               )}
