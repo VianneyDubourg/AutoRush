@@ -24,6 +24,8 @@ import {
 import { useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { usePlan } from "@/hooks/use-plan"
+import { FFmpeg } from "@ffmpeg/ffmpeg"
+import { fetchFile, toBlobURL } from "@ffmpeg/util"
 
 interface Silence {
   id: number
@@ -41,9 +43,12 @@ export default function AutoCutPage() {
   const [videoDuration, setVideoDuration] = useState(0)
   const [videoName, setVideoName] = useState<string | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [detectedSilences, setDetectedSilences] = useState<Silence[]>([])
   const [processingProgress, setProcessingProgress] = useState(0)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
   
   // Réglages - fixes pour plan gratuit, ajustables pour Creator/Pro
   const [threshold, setThreshold] = useState(-40)
@@ -53,12 +58,14 @@ export default function AutoCutPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const ffmpegRef = useRef<FFmpeg | null>(null)
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('video/')) {
       // Créer une URL pour la vidéo
       const url = URL.createObjectURL(file)
       setVideoUrl(url)
+      setVideoFile(file)
       setVideoName(file.name)
       setHasVideo(true)
       setDetectedSilences([])
@@ -112,10 +119,194 @@ export default function AutoCutPage() {
     setHasVideo(false)
     setVideoName(null)
     setVideoUrl(null)
+    setVideoFile(null)
     setDetectedSilences([])
     setCurrentTime(0)
     setIsPlaying(false)
     setIsProcessing(false)
+  }
+
+  // Initialiser FFmpeg
+  const initFFmpeg = async () => {
+    if (ffmpegRef.current && (ffmpegRef.current as any).loaded) {
+      return ffmpegRef.current
+    }
+
+    const ffmpeg = new FFmpeg()
+    ffmpegRef.current = ffmpeg
+
+    // Ajouter un listener pour la progression
+    ffmpeg.on('log', ({ message }) => {
+      console.log('FFmpeg:', message)
+    })
+
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+    
+    setDownloadProgress(10)
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    })
+    setDownloadProgress(30)
+
+    return ffmpeg
+  }
+
+  // Traiter la vidéo pour supprimer les silences
+  const processVideoWithFFmpeg = async (file: File, silences: Silence[]): Promise<Blob> => {
+    const ffmpeg = await initFFmpeg()
+    
+    // Trier les silences par ordre chronologique
+    const sortedSilences = [...silences].sort((a, b) => a.start - b.start)
+    
+    setDownloadProgress(40)
+    // Écrire le fichier vidéo dans le système de fichiers virtuel
+    await ffmpeg.writeFile('input.mp4', await fetchFile(file))
+    setDownloadProgress(50)
+    
+    // Créer les segments à garder (tout sauf les silences)
+    const segments: Array<{ start: number; end: number }> = []
+    let currentTime = 0
+    
+    for (const silence of sortedSilences) {
+      // Si il y a un segment avant le silence, l'ajouter
+      if (silence.start > currentTime) {
+        segments.push({ start: currentTime, end: silence.start })
+      }
+      currentTime = Math.max(currentTime, silence.end)
+    }
+    
+    // Ajouter le dernier segment s'il reste de la vidéo après le dernier silence
+    if (currentTime < videoDuration) {
+      segments.push({ start: currentTime, end: videoDuration })
+    }
+    
+    // Si aucun segment (toute la vidéo est silence), retourner une vidéo vide
+    if (segments.length === 0) {
+      throw new Error('Toute la vidéo est composée de silences')
+    }
+    
+    setDownloadProgress(60)
+    
+    // Si un seul segment, utiliser trim directement
+    if (segments.length === 1) {
+      const seg = segments[0]
+      await ffmpeg.exec([
+        '-i', 'input.mp4',
+        '-ss', seg.start.toString(),
+        '-t', (seg.end - seg.start).toString(),
+        '-c', 'copy',
+        'output.mp4'
+      ])
+    } else {
+      // Plusieurs segments : créer un filtre complexe pour trim et concat
+      const filterParts: string[] = []
+      const concatInputs: string[] = []
+      
+      segments.forEach((seg, i) => {
+        const duration = seg.end - seg.start
+        filterParts.push(`[0:v]trim=start=${seg.start}:duration=${duration},setpts=PTS-STARTPTS[v${i}]`)
+        filterParts.push(`[0:a]atrim=start=${seg.start}:duration=${duration},asetpts=PTS-STARTPTS[a${i}]`)
+        concatInputs.push(`[v${i}][a${i}]`)
+      })
+      
+      // Construire le filtre concat correctement
+      const filterComplex = `${filterParts.join(';')};${concatInputs.join('')}concat=n=${segments.length}:v=1:a=1[outv][outa]`
+      
+      // Exécuter FFmpeg
+      await ffmpeg.exec([
+        '-i', 'input.mp4',
+        '-filter_complex', filterComplex,
+        '-map', '[outv]',
+        '-map', '[outa]',
+        '-c:v', 'libx264',
+        '-c:a', 'aac',
+        '-preset', 'fast',
+        '-crf', '23',
+        '-shortest',
+        'output.mp4'
+      ])
+    }
+    
+    setDownloadProgress(90)
+    
+    // Lire le fichier de sortie
+    const data = await ffmpeg.readFile('output.mp4')
+    
+    // Nettoyer les fichiers temporaires
+    await ffmpeg.deleteFile('input.mp4')
+    await ffmpeg.deleteFile('output.mp4')
+    
+    setDownloadProgress(100)
+    return new Blob([data], { type: 'video/mp4' })
+  }
+
+  // Télécharger la vidéo traitée
+  const handleDownloadProcessedVideo = async () => {
+    if (!videoFile || detectedSilences.length === 0) {
+      return
+    }
+
+    setIsDownloading(true)
+    setDownloadProgress(0)
+    
+    try {
+      // Traiter la vidéo avec FFmpeg pour supprimer les silences
+      const processedBlob = await processVideoWithFFmpeg(videoFile, detectedSilences)
+      
+      // Créer un nom de fichier pour la vidéo traitée
+      const originalName = videoName || 'video.mp4'
+      const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '')
+      const extension = originalName.split('.').pop()
+      const processedFileName = `${nameWithoutExt}_processed.${extension}`
+      
+      // Convertir le Blob en File pour l'upload
+      const processedFile = new File([processedBlob], processedFileName, { type: 'video/mp4' })
+      
+      // Uploader vers Supabase
+      try {
+        const formData = new FormData()
+        formData.append('file', processedFile)
+        
+        const uploadResponse = await fetch('/api/videos/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        
+        if (uploadResponse.ok) {
+          const result = await uploadResponse.json()
+          console.log('Vidéo traitée uploadée avec succès:', result)
+        } else {
+          const error = await uploadResponse.json()
+          console.warn('Erreur lors de l\'upload vers Supabase:', error)
+          // On continue quand même le téléchargement local
+        }
+      } catch (uploadError) {
+        console.warn('Erreur lors de l\'upload vers Supabase:', uploadError)
+        // On continue quand même le téléchargement local
+      }
+      
+      // Créer un lien de téléchargement local
+      const url = URL.createObjectURL(processedBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = processedFileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Nettoyer l'URL après un délai
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 100)
+      
+    } catch (error) {
+      console.error('Erreur lors du traitement:', error)
+      alert(`Erreur lors du traitement de la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    } finally {
+      setIsDownloading(false)
+      setDownloadProgress(0)
+    }
   }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -598,12 +789,31 @@ export default function AutoCutPage() {
                     />
                   </div>
                 </div>
+                {isDownloading && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Traitement de la vidéo...</span>
+                      <span className="font-medium">{downloadProgress}%</span>
+                    </div>
+                    <Progress value={downloadProgress} />
+                  </div>
+                )}
                 <Button 
                   className="w-full" 
-                  disabled={isProcessing || detectedSilences.length === 0}
+                  disabled={isProcessing || detectedSilences.length === 0 || isDownloading}
+                  onClick={handleDownloadProcessedVideo}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Télécharger la vidéo traitée
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Traitement en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Télécharger la vidéo traitée
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
