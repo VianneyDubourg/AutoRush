@@ -15,7 +15,7 @@ import { usePlan } from "@/hooks/use-plan"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { useWaveform } from "@/hooks/use-waveform"
 import { useFFmpegProcessing } from "@/hooks/use-ffmpeg-processing"
-import { formatTime, downloadBlob, getProcessedFileName, uploadToSupabase } from "@/lib/video-utils"
+import { formatTime, downloadBlob, getProcessedFileName } from "@/lib/video-utils"
 
 interface Silence {
   id: number
@@ -122,17 +122,11 @@ export default function AutoCutPage() {
     setDownloadProgress(0)
     
     try {
+      // Traiter la vidéo localement avec FFmpeg
       const processedBlob = await processVideo(videoFile, detectedSilences, videoPlayer.videoDuration)
       const processedFileName = getProcessedFileName(videoName || 'video.mp4')
-      const processedFile = new File([processedBlob], processedFileName, { type: 'video/mp4' })
       
-      try {
-        await uploadToSupabase(processedFile)
-        console.log('Vidéo traitée uploadée avec succès')
-      } catch (error) {
-        console.warn('Erreur lors de l\'upload:', error)
-      }
-      
+      // Télécharger directement depuis le navigateur (pas besoin de Supabase)
       downloadBlob(processedBlob, processedFileName)
     } catch (error) {
       console.error('Erreur lors du traitement:', error)

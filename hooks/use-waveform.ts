@@ -12,52 +12,7 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
 
-  const initWaveform = useCallback((url: string) => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy()
-      wavesurferRef.current = null
-    }
-    
-    if (!waveformRef.current || !videoRef.current) return
-    
-    const video = videoRef.current
-    
-    const initWhenReady = () => {
-      if (video.readyState < 2) {
-        video.addEventListener('loadedmetadata', initWhenReady, { once: true })
-        return
-      }
-      
-      const audio = document.createElement('audio')
-      audio.src = url
-      audio.crossOrigin = 'anonymous'
-      
-      const wavesurfer = WaveSurfer.create({
-        container: waveformRef.current!,
-        waveColor: 'hsl(var(--primary))',
-        progressColor: 'hsl(var(--primary) / 0.5)',
-        cursorColor: 'hsl(var(--primary))',
-        barWidth: 2,
-        barRadius: 2,
-        barGap: 1,
-        height: 120,
-        normalize: true,
-        backend: 'MediaElement',
-        media: audio,
-        interact: false,
-      })
-      
-      wavesurferRef.current = wavesurfer
-      wavesurfer.on('ready', () => {
-        if (video) {
-          updateSilenceRegions()
-        }
-      })
-    }
-    
-    initWhenReady()
-  }, [videoRef])
-
+  // Mettre à jour les régions de silence
   const updateSilenceRegions = useCallback(() => {
     if (!wavesurferRef.current) return
     wavesurferRef.current.clearRegions()
@@ -74,20 +29,62 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
 
   // Initialiser la waveform quand la vidéo change
   useEffect(() => {
-    if (videoUrl) {
-      initWaveform(videoUrl)
+    if (!videoUrl || !waveformRef.current) return
+
+    // Détruire l'instance précédente
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy()
+      wavesurferRef.current = null
     }
+    
+    // Attendre un peu pour s'assurer que le conteneur est bien monté
+    const timeoutId = setTimeout(() => {
+      if (!waveformRef.current) return
+      
+      // Utiliser WebAudio backend qui fonctionne mieux avec les vidéos
+      const wavesurfer = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: 'hsl(var(--primary))',
+        progressColor: 'hsl(var(--primary) / 0.5)',
+        cursorColor: 'hsl(var(--primary))',
+        barWidth: 2,
+        barRadius: 2,
+        barGap: 1,
+        height: 120,
+        normalize: true,
+        backend: 'WebAudio',
+        interact: false,
+      })
+      
+      wavesurferRef.current = wavesurfer
+      
+      // Charger l'audio de la vidéo
+      wavesurfer.load(videoUrl)
+      
+      wavesurfer.on('ready', () => {
+        // Mettre à jour les régions une fois que la waveform est prête
+        if (detectedSilences.length > 0) {
+          updateSilenceRegions()
+        }
+      })
+      
+      wavesurfer.on('error', (error) => {
+        console.error('Erreur WaveSurfer:', error)
+      })
+    }, 100)
+
     return () => {
+      clearTimeout(timeoutId)
       if (wavesurferRef.current) {
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
       }
     }
-  }, [videoUrl, initWaveform])
+  }, [videoUrl, updateSilenceRegions])
 
   // Mettre à jour les régions quand les silences changent
   useEffect(() => {
-    if (detectedSilences.length > 0) {
+    if (wavesurferRef.current && detectedSilences.length > 0) {
       updateSilenceRegions()
     }
   }, [detectedSilences, updateSilenceRegions])
@@ -100,16 +97,26 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
     const wavesurfer = wavesurferRef.current
     
     const handleTimeUpdate = () => {
-      if (video.duration > 0) {
+      if (video.duration > 0 && wavesurfer.getDuration() > 0) {
         const progress = video.currentTime / video.duration
-        if (Math.abs((wavesurfer.getCurrentTime() / wavesurfer.getDuration()) - progress) > 0.01) {
+        const currentProgress = wavesurfer.getCurrentTime() / wavesurfer.getDuration()
+        if (Math.abs(currentProgress - progress) > 0.01) {
           wavesurfer.seekTo(progress)
         }
       }
     }
     
-    const handlePlay = () => wavesurfer.play()
-    const handlePause = () => wavesurfer.pause()
+    const handlePlay = () => {
+      if (wavesurferRef.current) {
+        wavesurferRef.current.play()
+      }
+    }
+    
+    const handlePause = () => {
+      if (wavesurferRef.current) {
+        wavesurferRef.current.pause()
+      }
+    }
     
     video.addEventListener('timeupdate', handleTimeUpdate)
     video.addEventListener('play', handlePlay)
@@ -120,7 +127,7 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
       video.removeEventListener('play', handlePlay)
       video.removeEventListener('pause', handlePause)
     }
-  }, [videoUrl])
+  }, [videoUrl, videoRef])
 
   return { waveformRef }
 }

@@ -22,18 +22,3 @@ export const getProcessedFileName = (originalName: string): string => {
   const extension = originalName.split('.').pop()
   return `${nameWithoutExt}_processed.${extension || 'mp4'}`
 }
-
-export const uploadToSupabase = async (file: File): Promise<void> => {
-  const formData = new FormData()
-  formData.append('file', file)
-  
-  const response = await fetch('/api/videos/upload', {
-    method: 'POST',
-    body: formData,
-  })
-  
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Erreur lors de l\'upload')
-  }
-}
