@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import { toBlobURL } from '@ffmpeg/util'
 
 interface Silence {
   start: number
@@ -40,7 +40,10 @@ export function useFFmpegProcessing() {
       const sortedSilences = [...silences].sort((a, b) => a.start - b.start)
       
       setDownloadProgress(40)
-      await ffmpeg.writeFile('input.mp4', await fetchFile(file))
+      // Convertir le File en ArrayBuffer puis en Uint8Array pour FFmpeg
+      const arrayBuffer = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+      await ffmpeg.writeFile('input.mp4', uint8Array)
       setDownloadProgress(50)
       
       // Calculer les segments à garder
