@@ -7,15 +7,18 @@
 2. Connectez-vous à votre compte
 3. Sélectionnez votre projet AutoRush
 
-### 1.2 Créer le bucket "videos"
-1. Dans le menu de gauche, cliquez sur **"Storage"**
-2. Cliquez sur **"New bucket"** ou **"Create bucket"**
-3. Configurez le bucket :
+### 1.2 Créer le bucket "videos" (avec limite de 50 MB pour tester)
+**Note** : Pour l'instant, on utilise la limite par défaut de 50 MB. Vous pourrez l'augmenter plus tard dans Storage Settings si nécessaire.
+
+1. Cliquez sur **"New bucket"** ou **"Create bucket"**
+2. Configurez le bucket :
    - **Name** : `videos` (exactement comme ça, en minuscules)
    - **Public bucket** : ✅ **Cochez cette case** (pour permettre l'accès aux vidéos)
-   - **File size limit** : `10737418240` (10 Go en bytes - limite par fichier)
-   - **Allowed MIME types** : Laissez vide ou ajoutez `video/*` pour accepter tous les formats vidéo
-4. Cliquez sur **"Create bucket"**
+   - **Restrict file size** : ❌ **Désactivez le toggle** (pour utiliser la limite globale de 50 MB)
+   - **Restrict MIME types** : ❌ **Laissez désactivé** (ou activez et ajoutez `video/*` si vous voulez restreindre)
+3. Cliquez sur **"Create bucket"**
+
+**Note pour plus tard** : Pour augmenter la limite à 10 GB, allez dans Storage Settings (⚙️) et augmentez la "File size limit" globale, puis modifiez le bucket pour activer "Restrict file size" avec 10 GB.
 
 ### 1.3 Configurer les politiques RLS (Row Level Security)
 1. Dans Storage, cliquez sur le bucket `videos`
