@@ -19,12 +19,10 @@ import {
   CheckCircle2,
   Loader2,
   Mail,
-  Github,
-  Twitter,
-  Linkedin,
   Sparkles,
   ArrowUpRight
 } from "lucide-react"
+import { Footer } from "@/components/footer"
 
 export default function Home() {
   const showTooltip = useCallback((element: HTMLElement, value: string) => {
@@ -662,70 +660,7 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="relative pt-24 pb-12">
-          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-            <div className="absolute inset-0 backdrop-blur-3xl [mask-image:linear-gradient(to_bottom,transparent,black)]"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-black"></div>
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-20">
-              <div>
-                <h4 className="text-base font-medium text-white mb-6">Plateforme</h4>
-                <ul className="space-y-4">
-                  <li><a href="/dashboard/autocut" className="text-sm text-neutral-500 hover:text-white transition-colors">AutoCut</a></li>
-                  <li><a href="/dashboard/autoframe" className="text-sm text-neutral-500 hover:text-white transition-colors">AutoFrame</a></li>
-                  <li><a href="/dashboard/videos" className="text-sm text-neutral-500 hover:text-white transition-colors">Mes vidéos</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-base font-medium text-white mb-6">Entreprise</h4>
-                <ul className="space-y-4">
-                  <li><a href="/about" className="text-sm text-neutral-500 hover:text-white transition-colors">À propos</a></li>
-                  <li><a href="/blog" className="text-sm text-neutral-500 hover:text-white transition-colors">Blog</a></li>
-                  <li><a href="/careers" className="text-sm text-neutral-500 hover:text-white transition-colors">Carrières</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-base font-medium text-white mb-6">Ressources</h4>
-                <ul className="space-y-4">
-                  <li><a href="/docs" className="text-sm text-neutral-500 hover:text-white transition-colors">Documentation</a></li>
-                  <li><a href="/api" className="text-sm text-neutral-500 hover:text-white transition-colors">Référence API</a></li>
-                  <li><a href="/status" className="text-sm text-neutral-500 hover:text-white transition-colors">Statut</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-base font-medium text-white mb-6">Légal</h4>
-                <ul className="space-y-4">
-                  <li><a href="/privacy" className="text-sm text-neutral-500 hover:text-white transition-colors">Confidentialité</a></li>
-                  <li><a href="/terms" className="text-sm text-neutral-500 hover:text-white transition-colors">Conditions</a></li>
-                  <li><a href="/cookies" className="text-sm text-neutral-500 hover:text-white transition-colors">Cookies</a></li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5">
-              <div className="flex items-center gap-3 mb-4 md:mb-0">
-                <div className="w-6 h-6 bg-white/10 rounded-md flex items-center justify-center border border-white/10">
-                  <Zap className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-neutral-500 text-sm">© 2024 AutoRush</span>
-              </div>
-              <div className="flex gap-6">
-                <a href="https://github.com/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <Github className="w-4 h-4" />
-                </a>
-                <a href="https://twitter.com/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <Twitter className="w-4 h-4" />
-                </a>
-                <a href="https://linkedin.com/company/autorush" className="text-neutral-500 hover:text-white transition-colors">
-                  <Linkedin className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   )
