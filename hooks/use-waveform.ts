@@ -11,19 +11,38 @@ interface Silence {
 export function useWaveform(videoUrl: string | null, detectedSilences: Silence[], videoRef: React.RefObject<HTMLVideoElement>) {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
+  const regionsRef = useRef<any[]>([])
 
   // Mettre à jour les régions de silence
   const updateSilenceRegions = useCallback(() => {
     if (!wavesurferRef.current) return
-    wavesurferRef.current.clearRegions()
+    
+    // Supprimer les anciennes régions
+    regionsRef.current.forEach((region) => {
+      try {
+        region.remove()
+      } catch (e) {
+        // Ignorer les erreurs si la région n'existe plus
+      }
+    })
+    regionsRef.current = []
+    
+    // Ajouter les nouvelles régions
     detectedSilences.forEach((silence) => {
-      wavesurferRef.current?.addRegion({
-        start: silence.start,
-        end: silence.end,
-        color: 'rgba(239, 68, 68, 0.3)',
-        drag: false,
-        resize: false,
-      })
+      try {
+        const region = wavesurferRef.current?.addRegion({
+          start: silence.start,
+          end: silence.end,
+          color: 'rgba(239, 68, 68, 0.3)',
+          drag: false,
+          resize: false,
+        })
+        if (region) {
+          regionsRef.current.push(region)
+        }
+      } catch (e) {
+        console.warn('Erreur lors de l\'ajout de la région:', e)
+      }
     })
   }, [detectedSilences])
 
@@ -75,6 +94,15 @@ export function useWaveform(videoUrl: string | null, detectedSilences: Silence[]
 
     return () => {
       clearTimeout(timeoutId)
+      // Nettoyer les régions
+      regionsRef.current.forEach((region) => {
+        try {
+          region.remove()
+        } catch (e) {
+          // Ignorer les erreurs
+        }
+      })
+      regionsRef.current = []
       if (wavesurferRef.current) {
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
