@@ -1,10 +1,16 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Settings } from "lucide-react"
+import { Settings, Moon, Sun } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { useTheme } from "next-themes"
 
 export default function SettingsPage() {
+  const { theme } = useTheme()
+
   return (
     <div className="space-y-6">
       <div>
@@ -18,6 +24,40 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Apparence</CardTitle>
+            <CardDescription>
+              Personnalisez l'apparence de l'application
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="theme">Thème</Label>
+                <p className="text-sm text-muted-foreground">
+                  Choisissez entre le mode clair, sombre ou système
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {theme === "dark" ? (
+                <>
+                  <Moon className="h-4 w-4" />
+                  <span>Mode sombre activé</span>
+                </>
+              ) : theme === "light" ? (
+                <>
+                  <Sun className="h-4 w-4" />
+                  <span>Mode clair activé</span>
+                </>
+              ) : (
+                <span>Thème système</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Profil</CardTitle>

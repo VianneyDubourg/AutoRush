@@ -127,11 +127,7 @@ export default function Home() {
     <>
       <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
       
-      <div className="min-h-screen" style={{
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        overflowX: "hidden"
-      }}>
+      <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
         <style dangerouslySetInnerHTML={{__html: `
           ::-webkit-scrollbar { width: 8px; }
           ::-webkit-scrollbar-track { background: #0a0a0a; }
