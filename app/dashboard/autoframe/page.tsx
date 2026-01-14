@@ -3,8 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Upload, Download, Frame, Monitor, Smartphone, Square } from "lucide-react"
+import { Slider } from "@/components/ui/slider"
+import { Upload, Download, Frame, Monitor, Smartphone, Square, Settings } from "lucide-react"
 import { useState } from "react"
+import { usePlan } from "@/hooks/use-plan"
 
 const formats = [
   {
@@ -28,8 +30,12 @@ const formats = [
 ]
 
 export default function AutoFramePage() {
+  const { config, isFree } = usePlan()
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null)
   const [hasVideo, setHasVideo] = useState(false)
+  const [positionX, setPositionX] = useState(0)
+  const [positionY, setPositionY] = useState(0)
+  const [zoom, setZoom] = useState(100)
 
   return (
     <div className="space-y-6">
@@ -94,54 +100,77 @@ export default function AutoFramePage() {
 
                 {/* Cadrage Controls */}
                 {hasVideo && selectedFormat && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Ajustement du cadrage</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Position horizontale</Label>
-                        <input
-                          type="range"
-                          min="-50"
-                          max="50"
-                          defaultValue="0"
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Position verticale</Label>
-                        <input
-                          type="range"
-                          min="-50"
-                          max="50"
-                          defaultValue="0"
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Zoom</Label>
-                        <input
-                          type="range"
-                          min="100"
-                          max="200"
-                          defaultValue="100"
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="face-tracking"
-                          defaultChecked
-                          className="rounded"
-                        />
-                        <Label htmlFor="face-tracking" className="cursor-pointer">
-                          Suivi automatique du regard
-                        </Label>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <>
+                    {isFree ? (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            Mode standard (Gratuit)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm text-muted-foreground">
+                            <p>• Cadrage centré automatiquement</p>
+                            <p>• Pas de repositionnement manuel</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground pt-3 border-t mt-3">
+                            Passez au plan Creator ou Pro pour débloquer le repositionnement manuel du cadre.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Ajustement du cadrage</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label>Position horizontale</Label>
+                              <span className="text-sm text-muted-foreground">{positionX}%</span>
+                            </div>
+                            <Slider
+                              value={[positionX]}
+                              onValueChange={([value]) => setPositionX(value)}
+                              min={-50}
+                              max={50}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label>Position verticale</Label>
+                              <span className="text-sm text-muted-foreground">{positionY}%</span>
+                            </div>
+                            <Slider
+                              value={[positionY]}
+                              onValueChange={([value]) => setPositionY(value)}
+                              min={-50}
+                              max={50}
+                              step={1}
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label>Zoom</Label>
+                              <span className="text-sm text-muted-foreground">{zoom}%</span>
+                            </div>
+                            <Slider
+                              value={[zoom]}
+                              onValueChange={([value]) => setZoom(value)}
+                              min={100}
+                              max={200}
+                              step={5}
+                              className="w-full"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
               </div>
             </CardContent>

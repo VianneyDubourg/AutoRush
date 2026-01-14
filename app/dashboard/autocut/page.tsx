@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { usePlan } from "@/hooks/use-plan"
 
 interface Silence {
   id: number
@@ -32,6 +33,7 @@ interface Silence {
 }
 
 export default function AutoCutPage() {
+  const { config, isFree } = usePlan()
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasVideo, setHasVideo] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -43,10 +45,10 @@ export default function AutoCutPage() {
   const [detectedSilences, setDetectedSilences] = useState<Silence[]>([])
   const [processingProgress, setProcessingProgress] = useState(0)
   
-  // Réglages
+  // Réglages - fixes pour plan gratuit, ajustables pour Creator/Pro
   const [threshold, setThreshold] = useState(-40)
   const [minDuration, setMinDuration] = useState(500)
-  const [padding, setPadding] = useState(100)
+  const [padding, setPadding] = useState(isFree ? 0 : 100)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
