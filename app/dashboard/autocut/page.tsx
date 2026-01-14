@@ -373,7 +373,6 @@ export default function AutoCutPage() {
                         const isInSilence = detectedSilences.some(s => 
                           position >= s.start && position <= s.end
                         )
-                        const isCurrentPosition = Math.abs(position - currentTime) < 0.5
                         const barHeight = Math.max(height, 5) // Minimum 5% pour visibilité
                         
                         return (
@@ -383,8 +382,7 @@ export default function AutoCutPage() {
                               "flex-1 min-w-[2px] rounded-t transition-all duration-75",
                               isInSilence 
                                 ? "bg-destructive shadow-sm shadow-destructive/30" 
-                                : "bg-primary shadow-sm shadow-primary/20",
-                              isCurrentPosition && "ring-2 ring-primary ring-offset-2 ring-offset-background z-10 scale-110"
+                                : "bg-primary shadow-sm shadow-primary/20"
                             )}
                             style={{ 
                               height: `${barHeight}%`,
