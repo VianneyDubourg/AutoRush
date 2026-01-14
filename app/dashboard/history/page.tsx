@@ -37,7 +37,7 @@ export default function HistoryPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Historique</h1>
         <p className="text-muted-foreground">
-          Consultez l'historique de vos traitements vidéo
+          Consultez l&apos;historique de vos traitements vidéo
         </p>
       </div>
 

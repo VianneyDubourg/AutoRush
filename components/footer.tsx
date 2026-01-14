@@ -15,7 +15,7 @@ export function Footer() {
               <span className="text-xl font-bold">AutoRush</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              L'outil simple et accessible pour préparer vos vidéos avant diffusion.
+              L&apos;outil simple et accessible pour préparer vos vidéos avant diffusion.
               Supprimez les silences et adaptez vos formats en quelques clics.
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function Footer() {
                   href="/terms" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Conditions d'utilisation
+                  Conditions d&apos;utilisation
                 </Link>
               </li>
             </ul>

@@ -463,7 +463,7 @@ export default function AutoCutPage() {
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Durée minimum d'un silence pour être supprimé. Recommandé: 500 ms
+                  Durée minimum d&apos;un silence pour être supprimé. Recommandé: 500 ms
                 </p>
               </div>
 

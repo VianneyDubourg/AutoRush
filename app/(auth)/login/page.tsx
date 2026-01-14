@@ -162,7 +162,7 @@ export default function LoginPage() {
               href="/register"
               className="hover:text-primary underline underline-offset-4"
             >
-              S'inscrire
+              S&apos;inscrire
             </Link>
           </p>
         </div>

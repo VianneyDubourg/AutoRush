@@ -64,7 +64,7 @@ export default function RegisterPage() {
       })
 
       if (authError) {
-        setError(authError.message || "Erreur lors de l'inscription")
+        setError(authError.message || "Erreur lors de l&apos;inscription")
       } else if (authData.user) {
         router.push("/dashboard")
         router.refresh()
@@ -203,7 +203,7 @@ export default function RegisterPage() {
               href="/terms"
               className="hover:text-primary underline underline-offset-4"
             >
-              Conditions d'utilisation
+              Conditions d&apos;utilisation
             </Link>{" "}
             et notre{" "}
             <Link

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/auth-client'
-import { getPlanConfig, type PlanType } from '@/lib/plans'
-import { formatQuota } from '@/lib/quota'
+import { getPlanConfig, formatQuota, type PlanType } from '@/lib/plans'
 
 interface QuotaData {
   quotaUsed: number

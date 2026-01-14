@@ -91,7 +91,7 @@ export default function Home() {
         const title = document.getElementById('page-title')
         if (title) {
           const titles: Record<string, string> = {
-            overview: "Vue d'ensemble",
+            overview: "Vue d&apos;ensemble",
             analytics: "AutoCut",
             deployments: "AutoFrame",
             team: "Mes vidéos"
@@ -121,7 +121,7 @@ export default function Home() {
         clearInterval(statsInterval)
       }
     }
-  }, [])
+  }, [showTooltip, hideTooltip])
 
   return (
     <>
@@ -255,7 +255,7 @@ export default function Home() {
             
             <p className="text-lg text-neutral-400 mb-10 max-w-2xl mx-auto leading-relaxed">
               Supprimez intelligemment les silences et adaptez vos formats avec AutoCut et AutoFrame. 
-              L'outil simple pour les créateurs qui veulent publier rapidement.
+              L&apos;outil simple pour les créateurs qui veulent publier rapidement.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 pointer-events-auto">
@@ -296,7 +296,7 @@ export default function Home() {
                     <div className="space-y-0.5" id="sidebar-menu">
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'overview')} className="sidebar-item active px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
                         <LayoutGrid className="w-4 h-4" />
-                        Vue d'ensemble
+                        Vue d&apos;ensemble
                       </div>
                       <div onClick={(e) => (window as any).setActiveTab(e.currentTarget, 'analytics')} className="sidebar-item px-3 py-2 text-sm text-neutral-400 hover:text-white rounded-md flex items-center gap-3 transition-all cursor-pointer border border-transparent">
                         <Scissors className="w-4 h-4" />
@@ -325,7 +325,7 @@ export default function Home() {
 
                     <div className="flex items-center justify-between mb-8 fade-in sticky top-0 z-30">
                       <h2 className="text-lg font-medium text-white flex items-center gap-2">
-                        <span id="page-title">Vue d'ensemble</span>
+                        <span id="page-title">Vue d&apos;ensemble</span>
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                       </h2>
                       <div className="flex gap-2">
@@ -633,8 +633,8 @@ export default function Home() {
                   <div>&nbsp;&nbsp;<span className="text-blue-300">seuil</span>: <span className="text-orange-400">-40</span>,</div>
                   <div>&nbsp;&nbsp;<span className="text-blue-300">dureeMinimum</span>: <span className="text-orange-400">500</span>,</div>
                   <div>&nbsp;&nbsp;<span className="text-blue-300">padding</span>: <span className="text-orange-400">100</span>,</div>
-                  <div>&nbsp;&nbsp;<span className="text-blue-300">format</span>: <span className="text-green-400">'mp4'</span>,</div>
-                  <div>&nbsp;&nbsp;<span className="text-blue-300">qualite</span>: <span className="text-green-400">'high'</span></div>
+                  <div>&nbsp;&nbsp;<span className="text-blue-300">format</span>: <span className="text-green-400">&apos;mp4&apos;</span>,</div>
+                  <div>&nbsp;&nbsp;<span className="text-blue-300">qualite</span>: <span className="text-green-400">&apos;high&apos;</span></div>
                   <div className="text-white">{'}'}</div>
                 </div>
               </div>
@@ -655,7 +655,7 @@ export default function Home() {
                 Commencer gratuitement
               </a>
               <a href="/contact" className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white font-medium rounded-full hover:bg-white/5 transition-all transform hover:scale-105 active:scale-95">
-                Contacter l'équipe
+                Contacter l&apos;équipe
               </a>
             </div>
           </div>

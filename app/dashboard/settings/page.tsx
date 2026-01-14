@@ -1,19 +1,21 @@
 "use client"
 
-"use client"
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
+import { Progress } from "@/components/ui/progress"
 import { Settings, Moon, Sun } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useTheme } from "next-themes"
 import { useState } from "react"
+import { useQuota } from "@/hooks/use-quota"
+import { formatQuota } from "@/lib/plans"
 
 export default function SettingsPage() {
   const { theme } = useTheme()
+  const { quota, isLoading: isQuotaLoading } = useQuota()
   const [defaultThreshold, setDefaultThreshold] = useState(-40)
   const [defaultDuration, setDefaultDuration] = useState(500)
   const [defaultPadding, setDefaultPadding] = useState(100)
@@ -35,7 +37,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Apparence</CardTitle>
             <CardDescription>
-              Personnalisez l'apparence de l'application
+              Personnalisez l&apos;apparence de l&apos;application
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -127,7 +129,7 @@ export default function SettingsPage() {
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Durée minimum d'un silence pour être supprimé. Recommandé: 500 ms
+                Durée minimum d&apos;un silence pour être supprimé. Recommandé: 500 ms
               </p>
             </div>
 
@@ -158,18 +160,32 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Stockage</CardTitle>
             <CardDescription>
-              Gestion de l'espace de stockage
+              Gestion de l&apos;espace de stockage
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm mb-2">
                 <span>Espace utilisé</span>
-                <span className="font-medium">2.4 GB / 10 GB</span>
+                <span className="font-medium">
+                  {isQuotaLoading ? (
+                    "Chargement..."
+                  ) : quota ? (
+                    `${formatQuota(quota.quotaUsed)} / ${formatQuota(quota.quotaMax)}`
+                  ) : (
+                    "0 MB / 0 MB"
+                  )}
+                </span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full" style={{ width: "24%" }} />
-              </div>
+              {isQuotaLoading ? (
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div className="bg-muted h-2 rounded-full animate-pulse" style={{ width: "50%" }} />
+                </div>
+              ) : quota ? (
+                <Progress value={quota.percentage} className="h-2" />
+              ) : (
+                <Progress value={0} className="h-2" />
+              )}
             </div>
             <Button variant="outline">Nettoyer les vidéos anciennes</Button>
           </CardContent>

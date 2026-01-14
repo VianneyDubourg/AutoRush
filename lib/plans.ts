@@ -62,3 +62,10 @@ export function canUploadVideo(
 
   return { allowed: true }
 }
+
+export function formatQuota(mb: number): string {
+  if (mb < 1024) {
+    return `${mb.toFixed(2)} MB`
+  }
+  return `${(mb / 1024).toFixed(2)} Go`
+}

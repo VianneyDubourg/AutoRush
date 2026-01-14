@@ -4,10 +4,8 @@ import { Bell, Search, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/auth-client"
 import { useSession } from "@/hooks/use-session"
-import { useQuota } from "@/hooks/use-quota"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export function Header() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { quota } = useQuota()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -31,7 +28,7 @@ export function Header() {
 
   const userInitials = session?.user?.name
     ?.split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2) || "AR"
@@ -49,17 +46,6 @@ export function Header() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        {quota && (
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-            <div className="flex flex-col min-w-[100px]">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Quota</span>
-                <span className="font-medium">{quota.formattedUsed} / {quota.formattedMax}</span>
-              </div>
-              <Progress value={quota.percentage} className="h-1.5" />
-            </div>
-          </div>
-        )}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
