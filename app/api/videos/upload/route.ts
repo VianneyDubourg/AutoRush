@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Upload vers Supabase Storage
     const fileExt = file.name.split('.').pop()
     const fileName = `${user.id}/${Date.now()}.${fileExt}`
-    const filePath = `videos/${fileName}`
+    const filePath = fileName // Le bucket s'appelle déjà 'videos', pas besoin de le mettre dans le chemin
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('videos')
