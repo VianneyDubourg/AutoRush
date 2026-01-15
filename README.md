@@ -94,3 +94,13 @@ AutoRush/
 - `npm run build` - Construit l'application pour la production
 - `npm start` - Lance l'application en mode production
 - `npm run lint` - Vérifie le code avec ESLint
+
+## 🚀 Déploiement
+
+Pour déployer votre site sur Vercel avec votre propre nom de domaine, consultez le guide complet : **[VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md)**
+
+Ce guide vous explique :
+- Comment connecter votre projet à GitHub
+- Comment déployer sur Vercel (gratuit)
+- Comment connecter votre nom de domaine LWS
+- Comment configurer le déploiement automatique
